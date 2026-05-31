@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LATVOMY | Exocortex</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #2c3e50;
+            --link-color: #2980b9;
+            --container-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --link-color: #64b5f6;
+            --container-bg: #1e1e1e;
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--container-bg);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 70vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover, .btn.active { 
+            background: var(--border-color); 
+            font-weight: bold;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 1.8em; }
+        .subtitle { font-style: italic; color: #7f8c8d; margin-top: 0; }
+        [data-theme="dark"] .subtitle { color: #a0a0a0; }
+        
+        a { color: var(--link-color); text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+
+        main { flex-grow: 1; }
+
+        ul.hub-list { list-style-type: none; padding: 0; }
+        ul.hub-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        ul.hub-list li:last-child { border-bottom: none; }
+
+        .footer-quote {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.95em;
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        
+        [data-theme="dark"] .footer-quote, [data-theme="dark"] .footer-note { color: #a1a1aa; }
+
+        .lang-content { display: none; }
+        html[lang="sk"] .lang-content[data-lang="sk"] { display: block; }
+        html[lang="en"] .lang-content[data-lang="en"] { display: block; }
+        html[lang="hu"] .lang-content[data-lang="hu"] { display: block; }
+        
+        html[lang="sk"] span.lang-content[data-lang="sk"] { display: inline; }
+        html[lang="en"] span.lang-content[data-lang="en"] { display: inline; }
+        html[lang="hu"] span.lang-content[data-lang="hu"] { display: inline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>
+                <span class="lang-content" data-lang="sk"><b>LA</b>boratórium <b>TVO</b>rivého <b>MY</b>slenia v2.0</span>
+                <span class="lang-content" data-lang="en"><b>LA</b>boratory of Crea<b>T</b>i<b>V</b>e <b>M</b>ind v2.0</span>
+                <span class="lang-content" data-lang="hu">Kreatív Gondolkodás Laboratóriuma v2.0</span>
+            </h1>
+            <p class="subtitle">
+                <span class="lang-content" data-lang="sk">život ide naživo, ale v laboratórnych podmienkach môžeme trénovať na život ;-)</span>
+                <span class="lang-content" data-lang="en">life happens live, but in laboratory conditions, we can train for life ;-)</span>
+                <span class="lang-content" data-lang="hu">az élet élőben zajlik, de laboratóriumi körülmények között edzhetünk az életre ;-)</span>
+            </p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="setLang('sk')" id="btn-sk">SK</button>
+            <button class="btn" onclick="setLang('en')" id="btn-en">EN</button>
+            <button class="btn" onclick="setLang('hu')" id="btn-hu">HU</button>
+            <button class="btn" id="theme-toggle">🌓</button>
+        </div>
+    </div>
+
+    <main>
+        <p>
+            <span class="lang-content" data-lang="sk">Informačná architektúra a otvorené štruktúry poznania.</span>
+            <span class="lang-content" data-lang="en">Information architecture and open structures of knowledge.</span>
+            <span class="lang-content" data-lang="hu">Információs architektúra és a tudás nyílt szerkezetei.</span>
+        </p>
+        <ul class="hub-list">
+            <li>
+                <a href="./uvahy/">
+                    <span class="lang-content" data-lang="sk">Moje úvahy a texty &rarr;</span>
+                    <span class="lang-content" data-lang="en">My thoughts and texts &rarr;</span>
+                    <span class="lang-content" data-lang="hu">Gondolataim és szövegeim &rarr;</span>
+                </a>
+            </li>
+        </ul>
+    </main>
+
+    <div class="footer-quote">
+        <span class="lang-content" data-lang="sk">Tvorivosť je jedna z prirodzených vlastností človeka. Mnoho ľudí ale umrie bez toho, aby to objavilo, ale vo forme "zdravého sedliackeho rozumu" ho mnohí používajú.</span>
+        <span class="lang-content" data-lang="en">Creativity is one of the natural human traits. Many people die without discovering it, but many use it in the form of "common sense".</span>
+        <span class="lang-content" data-lang="hu">A kreativitás az ember egyik természetes tulajdonsága. Sokan úgy halnak meg, hogy ezt nem fedezik fel, de "józan paraszti ész" formájában sokan használják.</span>
+    </div>
+    
+    <div class="footer-note">
+        <span class="lang-content" data-lang="sk">Tieto stránky vygeneroval syntetický štatistický knihovník, blíženec / gemini na základe otázok <a href="./o-mne/">autora</a> (Verzia 2.2).</span>
+        <span class="lang-content" data-lang="en">These pages were generated by a synthetic statistical librarian, twin / gemini based on the questions of the <a href="./o-mne/">author</a> (Version 2.2).</span>
+        <span class="lang-content" data-lang="hu">Ezeket az oldalakat egy szintetikus statisztikai könyvtáros, iker / gemini generálta a <a href="./o-mne/">szerző</a> kérdései alapján (Verzió 2.2).</span>
+    </div>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        let currentTheme = document.documentElement.getAttribute('data-theme');
+        let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+
+    function setLang(lang) {
+        document.documentElement.setAttribute('lang', lang);
+        localStorage.setItem('lang', lang);
+        
+        document.querySelectorAll('.controls .btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-' + lang).classList.add('active');
+    }
+
+    const savedLang = localStorage.getItem('lang') || 'sk';
+    setLang(savedLang);
+</script>
+
+</body>
+</html>

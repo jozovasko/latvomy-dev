@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Končia sa lineárne dejiny? | LATVOMY</title>
+    <style>
+        /* CSS premenné - Svetlý režim (predvolený) */
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #2c3e50;
+            --accent-color: #0284c7;
+            --accent-hover: #0369a1;
+            --accent-deep: #be123c;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --perex-dim: #64748b;
+            --details-bg: #f8fafc;
+            --link-color: #2980b9;
+        }
+
+        /* CSS premenné - Tmavý režim */
+        [data-theme="dark"] {
+            --bg-color: #0f111a;
+            --text-color: #e4e4e7;
+            --accent-color: #0ea5e9;
+            --accent-hover: #38bdf8;
+            --accent-deep: #e11d48;
+            --card-bg: #1e2133;
+            --border-color: #333852;
+            --perex-dim: #9ca3af;
+            --details-bg: rgba(255, 255, 255, 0.02);
+            --link-color: #64b5f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Horná systémová navigácia */
+        .top-nav {
+            max-width: 1600px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .nav-back { color: var(--link-color); text-decoration: none; font-weight: 500; }
+        .nav-back:hover { text-decoration: underline; }
+
+        .controls { display: flex; gap: 10px; }
+        .btn {
+            background: none; border: 1px solid var(--border-color); color: var(--text-color);
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: all 0.2s ease;
+        }
+        .btn:hover, .btn.active { background: var(--border-color); font-weight: bold; }
+
+        /* Logika skryvania textu a blokov podla jazyka */
+        .lang-content { display: none; }
+        html[lang="sk"] .lang-content[data-lang="sk"] { display: block; }
+        html[lang="en"] .lang-content[data-lang="en"] { display: block; }
+        html[lang="hu"] .lang-content[data-lang="hu"] { display: block; }
+        
+        html[lang="sk"] span.lang-content[data-lang="sk"] { display: inline; }
+        html[lang="en"] span.lang-content[data-lang="en"] { display: inline; }
+        html[lang="hu"] span.lang-content[data-lang="hu"] { display: inline; }
+
+        /* Layout pre Split-screen */
+        #app-wrapper { max-width: 1600px; margin: 0 auto; display: flex; gap: 20px; transition: all 0.4s ease; align-items: flex-start; }
+        .main-container { flex: 1; min-width: 0; transition: all 0.4s ease; }
+
+        /* Bočný panel (Split screen) */
+        #side-panel {
+            width: 0; opacity: 0; visibility: hidden; background: var(--card-bg);
+            border: 1px solid var(--accent-color); border-radius: 8px; transition: all 0.4s ease;
+            display: flex; flex-direction: column; position: sticky; top: 20px;
+            max-height: calc(100vh - 40px); overflow-y: auto;
+        }
+        #app-wrapper.split-active #side-panel { width: 450px; opacity: 1; visibility: visible; padding: 25px; }
+        #side-panel h3 { color: var(--accent-color); margin-top: 0; font-size: 1.4rem;}
+        #side-panel p { font-size: 1.05rem; color: var(--text-color); opacity: 0.9; line-height: 1.6; }
+        .external-btn {
+            display: inline-block; background-color: var(--accent-color); color: #fff;
+            text-decoration: none; text-align: center; padding: 12px 15px; border-radius: 6px;
+            font-weight: bold; margin-top: 20px; transition: background-color 0.2s;
+        }
+        .external-btn:hover { background-color: var(--accent-hover); text-decoration: none; color: #fff; }
+        .close-panel-btn {
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-color);
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; align-self: flex-end; margin-bottom: 15px;
+        }
+        .close-panel-btn:hover { border-color: var(--accent-deep); color: var(--accent-deep); }
+
+        header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        h1.main-title { font-size: clamp(1.8rem, 4vw, 2.8rem); color: var(--accent-color); margin-bottom: 20px; text-align: center; }
+        
+        /* Perex úprava - exkluzívne zobrazenie */
+        .perex-container { max-width: 1000px; margin: 0 auto; }
+        .perex-text {
+            font-size: 1.15rem; font-style: italic; color: var(--perex-dim);
+            padding: 18px 24px; border-left: 4px solid var(--accent-color);
+            background: var(--details-bg); border-radius: 0 8px 8px 0; margin: 0;
+            line-height: 1.6;
+        }
+        
+        .content-area { background: var(--card-bg); padding: clamp(20px, 4vw, 40px); border-radius: 8px; border: 1px solid var(--border-color); font-size: 1.1rem; }
+        .lang-section { display: none; animation: fadeIn 0.4s ease; }
+        .lang-section.active { display: block; }
+        
+        h2 { color: var(--accent-hover); font-size: 1.7rem; margin-top: 2em; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        
+        /* Tooltip a linky */
+        .wiki-link {
+            color: var(--accent-hover); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;
+            cursor: pointer; position: relative; font-weight: 600; padding: 0 2px;
+        }
+        .wiki-link:hover { background: rgba(14, 165, 233, 0.1); border-radius: 4px; }
+        .wiki-link::after {
+            content: attr(data-summary); position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+            width: 280px; background: var(--card-bg); border: 1px solid var(--accent-color); padding: 12px; border-radius: 6px;
+            font-size: 0.95rem; color: var(--text-color); font-weight: normal; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0; visibility: hidden; transition: all 0.2s ease; pointer-events: none; line-height: 1.4; text-align: left;
+        }
+        .wiki-link:hover::after { opacity: 1; visibility: visible; bottom: 110%; }
+
+        /* Trojúrovňové detaily */
+        details { margin: 25px 0; background: var(--details-bg); border-radius: 6px; padding: 15px 20px; border-left: 4px solid var(--border-color); transition: all 0.3s ease; }
+        details.level-2[open] { border-left-color: var(--accent-color); background: rgba(14, 165, 233, 0.03); padding-bottom: 60px; position: relative; }
+        details.level-3 { border-left: 4px solid var(--accent-deep); background: rgba(225, 29, 72, 0.03); margin-top: 20px; }
+        details.level-3[open] { border-left-color: var(--accent-deep); background: rgba(225, 29, 72, 0.06); padding-bottom: 50px; position: relative;}
+        
+        summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; font-size: 1.15rem; }
+        details.level-2 > summary { color: var(--accent-hover); }
+        details.level-3 > summary { color: var(--accent-deep); font-size: 1.05rem;}
+        summary::-webkit-details-marker { display: none; }
+        summary::before { content: '►'; font-size: 0.8em; margin-right: 12px; transition: transform 0.2s; }
+        details[open] > summary::before { transform: rotate(90deg); }
+        .details-content { margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 20px; }
+
+        /* Tlačidlá na zatvorenie detailov */
+        .close-btn {
+            position: absolute; bottom: 15px; right: 20px; background: transparent;
+            border: 1px solid; padding: 6px 15px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
+        }
+        details.level-2 > .close-btn { color: var(--accent-hover); border-color: var(--accent-hover); }
+        details.level-2 > .close-btn:hover { background: var(--accent-color); color: #fff; }
+        details.level-3 > .close-btn { color: var(--accent-deep); border-color: var(--accent-deep); }
+        details.level-3 > .close-btn:hover { background: var(--accent-deep); color: #fff; }
+
+        /* Vektorové grafy */
+        .graph-container { margin: 30px 0; padding: 25px; background: var(--details-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
+        svg { width: 100%; max-width: 650px; height: auto; }
+        .svg-text { fill: var(--text-color); }
+        .svg-dim-text { fill: var(--perex-dim); }
+        .svg-grid { stroke: var(--border-color); }
+
+        .footer-note { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border-color); font-size: 0.95rem; color: var(--perex-dim); text-align: right; font-style: italic; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 1024px) {
+            #app-wrapper.split-active { flex-direction: column; }
+            #app-wrapper.split-active #side-panel { width: 100%; position: static; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <a href="./index.html" class="nav-back">
+        <span class="lang-content" data-lang="sk">&larr; Späť na Rôzne úvahy</span>
+        <span class="lang-content" data-lang="en">&larr; Back to Various thoughts</span>
+        <span class="lang-content" data-lang="hu">&larr; Vissza a Különféle gondolatokhoz</span>
+    </a>
+    <div class="controls">
+        <button class="btn lang-btn" onclick="setLang('sk')" id="btn-sk">SK</button>
+        <button class="btn lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+        <button class="btn lang-btn" onclick="setLang('hu')" id="btn-hu">HU</button>
+        <button class="btn" id="theme-toggle">🌓</button>
+    </div>
+</div>
+
+<div id="app-wrapper">
+    <div class="main-container">
+        <header>
+            <h1 class="main-title">
+                <span class="lang-content" data-lang="sk">Končia sa lineárne dejiny?</span>
+                <span class="lang-content" data-lang="en">Is linear history ending?</span>
+                <span class="lang-content" data-lang="hu">Véget ér a lineáris történelem?</span>
+            </h1>
+            
+            <div class="perex-container">
+                <!-- SK Perex -->
+                <div class="lang-content" data-lang="sk">
+                    <p class="perex-text">Od šokovej terapie k exponenciálnemu rastu AI v morálne stagnujúcej spoločnosti sledujeme kolaps zastaraného operačného systému. Aká je architektúra únikového východu?</p>
+                </div>
+                <!-- EN Perex -->
+                <div class="lang-content" data-lang="en">
+                    <p class="perex-text">From shock therapy to the exponential growth of AI in a morally stagnating society, we are witnessing the collapse of an obsolete operating system. What is the architecture of the escape hatch?</p>
+                </div>
+                <!-- HU Perex -->
+                <div class="lang-content" data-lang="hu">
+                    <p class="perex-text">A sokkterápiától az MI exponenciális növekedéséig egy erkölcsileg stagnáló társadalomban egy elavult operációs rendszer összeomlásának vagyunk tanúi. Mi a vészkijárat építészete?</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            
+            <!-- ================= SK VERZIA ================= -->
+            <div id="content-sk" class="lang-section active">
+                <h2>1. Koniec lineárnej ilúzie a rozdelenie sveta</h2>
+                <p>Príbeh globálnej transformácie možno personifikovať na trajektórii <a href="https://sk.wikipedia.org/wiki/Jeffrey_Sachs" class="wiki-link" data-title="Jeffrey Sachs" data-summary="Americký ekonóm, pôvodne známy ako architekt 'šokovej terapie' pri prechode na voľný trh. Dnes kritik americkej zahraničnej politiky a obhajca multipolarity." onclick="openSidePanel(event, this)">Jeffreyho Sachsa</a>. V 90. rokoch pôsobil ako nekompromisný architekt ekonomickej transformácie. Dnes však, vo svojich listoch nemeckému kancelárovi, apeluje na zastavenie militarizácie a volá po diplomatických kompromisoch s nezápadnými veľmocami. Architekti globalizácie zistili, že ich stavba padá, pretože naivne uverili v lineárny koniec histórie.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" /></marker></defs>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-grid" stroke-width="2" />
+                        <circle cx="100" cy="100" r="6" fill="#e11d48" />
+                        <text x="100" y="80" class="svg-text" font-size="14" text-anchor="middle">Jalta (1945)</text>
+                        <text x="100" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Sféry vplyvu</text>
+                        <circle cx="300" cy="100" r="6" fill="#0ea5e9" />
+                        <text x="300" y="80" class="svg-text" font-size="14" text-anchor="middle">Malta (1989)</text>
+                        <text x="300" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Unifikácia</text>
+                        <path d="M 300 100 Q 400 30 500 30" fill="none" stroke="#0ea5e9" stroke-width="3" marker-end="url(#arrow)" />
+                        <path d="M 300 100 Q 400 170 500 170" fill="none" stroke="#e11d48" stroke-width="3" marker-end="url(#arrow)" />
+                        <text x="500" y="20" fill="#0ea5e9" font-size="14" text-anchor="middle">Západný blok</text>
+                        <text x="500" y="190" fill="#e11d48" font-size="14" text-anchor="middle">Nová Jalta (Multipolarita)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Úroveň 2: Systémový omyl a asymetrický realizmus</summary>
+                    <div class="details-content">
+                        <p>Západné elity urobili po roku 1989 zásadnú chybu. Uverili, že import západného ekonomického hardvéru automaticky zmení aj kultúrny softvér v Rusku či Číne. Aplikovali lineárne myslenie na nelineárny živý systém. Globálna <a href="https://sk.wikipedia.org/wiki/Hegem%C3%B3nia" class="wiki-link" data-title="Hegemónia" data-summary="Nadvláda, politická a vojenská dominancia jedného štátu (alebo bloku) nad ostatnými, udávajúca pravidlá globálneho systému." onclick="openSidePanel(event, this)">hegemónia</a> Západu sa tak roztrieštila o kultúrne a historické špecifiká iných civilizácií.</p>
+                        <details class="level-3">
+                            <summary>Úroveň 3: Historická symetria Jalty a Malty (Anatómia Sachsovho omylu)</summary>
+                            <div class="details-content">
+                                <p>Ak bola <a href="https://sk.wikipedia.org/wiki/Jaltsk%C3%A1_konferencia" class="wiki-link" data-title="Jaltská konferencia (1945)" data-summary="Stretnutie veľmocí, kde si cynicky, ale pragmaticky rozdelili svet, čo paradoxne prinieslo dlhodobú štrukturálnu stabilitu Studenej vojny." onclick="openSidePanel(event, this)">Jaltská konferencia</a> v roku 1945 pragmatickým rozdelením sfér vplyvu a <a href="https://sk.wikipedia.org/wiki/Maltsk%C3%A1_konferencia_(1989)" class="wiki-link" data-title="Maltská konferencia (1989)" data-summary="Stretnutie symbolicky ukončujúce Studenú vojnu. Deklarovalo svet bez sfér vplyvu, čo viedlo k 30 rokom západnej globalizácie." onclick="openSidePanel(event, this)">Malta (1989)</a> ilúziou jedného racionálneho sveta, dnešok je vytriezvením.</p>
+                                <ul>
+                                    <li><strong>Harvardská lineárna pýcha (90. roky):</strong> Príbeh J. Sachsa ilustruje tento systémový omyl vo svojej podstate. Po páde Berlínskeho múru aplikoval tzv. šokovú terapiu – presvedčenie, že rýchla ekonomická privatizácia automaticky prepíše aj demokratické inštitúcie. Bol to inžiniersky omyl, ktorý ignoroval kultúrnu zotrvačnosť a viedol k masívnej oligarchizácii.</li>
+                                    <li><strong>Asymetrický realizmus (Dnešok):</strong> Systém s jediným riadiacim pólom narástol do takej miery komplexity, že ho Washington logisticky nedokázal udržať. Sachs dnes otvorene konštatuje to, na čo prišli architekti komplexných systémov – univerzálny kód prestal platiť. Prichádza nutnosť Novej Jalty, kde si vznikajúce štruktúry (ako BRICS) budujú vlastné protokoly mimo pôvodného centrálneho servera.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>2. Samsarické dýchanie impérií</h2>
+                <p>To, čo dnes prežívame, je vyvrcholenie makrocyklov. Svetová ekonomika pulzuje vo fázach pripomínajúcich dýchanie – expanzia a integrácia sa strieda s fázou narastajúcej <a href="https://sk.wikipedia.org/wiki/Entropia_(sociol%C3%B3gia)" class="wiki-link" data-title="Sociálna entropia" data-summary="Miera neusporiadanosti, chaosu a rozpadu vnútornej štruktúry a väzieb v sociálnom alebo ekonomickom systéme." onclick="openSidePanel(event, this)">entropie</a>. Každý hegemón sa časom preťaží, pretože uprednostní krátkodobý finančný zisk pred udržateľnou službou vlastnej priemyselnej základni.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 50 100 Q 150 -50 250 100 T 450 100" fill="none" class="svg-grid" stroke-width="2" stroke-dasharray="5" />
+                        <path d="M 50 100 Q 150 -50 250 100" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <path d="M 250 100 Q 350 250 450 100" fill="none" stroke="#e11d48" stroke-width="4" />
+                        <text x="150" y="30" fill="#0ea5e9" font-size="14" text-anchor="middle">Nádych (Expanzia a Zisk)</text>
+                        <text x="350" y="180" fill="#e11d48" font-size="14" text-anchor="middle">Výdych (Entropia a Úpadok)</text>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-text" stroke-width="1" />
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Úroveň 2: Anatómia umelého finančného nádychu</summary>
+                    <div class="details-content">
+                        <p>Krásnym príkladom tohto dýchania je <a href="https://sk.wikipedia.org/wiki/Dawesov_pl%C3%A1n" class="wiki-link" data-title="Dawesov plán (1924)" data-summary="Americký finančný plán, ktorý nalial obrovské úvery do Nemecka po 1. svetovej vojne. Umelo stabilizoval systém, ktorý po stiahnutí úverov skolaboval." onclick="openSidePanel(event, this)">Dawesov plán</a> v medzivojnovom Nemecku. Wall Street vytvorila umelý finančný kruh, ktorému chýbala reálna ekonomická kotva.</p>
+                        <details class="level-3">
+                            <summary>Úroveň 3: Offshoring a fiktívny kapitál</summary>
+                            <div class="details-content">
+                                <p>Dnešná globalizácia funguje na podobnom defektnom kóde. Západ masívne presunul svoj priemysel do Ázie kvôli korporátnym maržiam a domácu ekonomiku založil na službách a <a href="https://sk.wikipedia.org/wiki/Fikt%C3%ADvny_kapit%C3%A1l" class="wiki-link" data-title="Fiktívny kapitál" data-summary="Hodnota, ktorá nemá krytie v reálnej materiálnej výrobe (deriváty, nafúknuté akcie), predstavuje len nárok na budúce (neisté) zisky." onclick="openSidePanel(event, this)">fiktívnom kapitáli</a>. Súčasná harmonizácia zisku a služby si bude vyžadovať návrat k lokálnej výrobe, inak systému hrozí <a href="https://sk.wikipedia.org/wiki/Hyperinfl%C3%A1cia" class="wiki-link" data-title="Hyperinflácia" data-summary="Nekontrolovateľné a extrémne rýchle znehodnotenie meny, zvyčajne spôsobené tlačou peňazí nekrytých reálnou produkciou." onclick="openSidePanel(event, this)">hyperinflácia</a>.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>3. Exponenciálny klin a algoritmická degradácia</h2>
+                <p>Do tohto pulzovania vstúpil bezprecedentný faktor: asymetria rastu. Zatiaľ čo vývoj AI a automatizácie naberá exponenciálne tempo, morálna výbava spoločnosti je vplyvom digitálneho <a href="https://sk.wikipedia.org/wiki/Panoptikum_(architekt%C3%BAra)" class="wiki-link" data-title="Panoptikum" data-summary="Architektonický koncept väzenia, kde dozorca vidí všetkých väzňov, no oni nevidia jeho. Dnes metafora pre digitálny dohľad." onclick="openSidePanel(event, this)">panoptika</a> sociálnych sietí degradovaná. Blížime sa k momentu systémovej <a href="https://sk.wikipedia.org/wiki/Te%C3%B3ria_bifurk%C3%A1ci%C3%AD" class="wiki-link" data-title="Bifurkácia (systémová teória)" data-summary="Kritický bod vo vývoji nelineárneho systému, kde aj malá zmena parametrov vedie k náhlemu a nepredvídateľnému rozštiepeniu správania." onclick="openSidePanel(event, this)">bifurkácie</a>, kedy paleolitické inštinkty dostali do rúk digitálny jadrový kufrík.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="50" y1="200" x2="550" y2="200" class="svg-grid" stroke-width="2" />
+                        <line x1="50" y1="200" x2="50" y2="20" class="svg-grid" stroke-width="2" />
+                        <path d="M 50 180 Q 300 170 500 30" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <text x="510" y="40" fill="#0ea5e9" font-size="14">Technológia (AI)</text>
+                        <path d="M 50 150 L 500 190" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="6" />
+                        <text x="510" y="190" fill="#e11d48" font-size="14">Morálka davu</text>
+                        <circle cx="280" cy="165" r="7" fill="#fbbf24" />
+                        <text x="280" y="145" fill="#fbbf24" font-size="14" text-anchor="middle">Singularita krehkosti</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Úroveň 2: Oddelenie intelektu od cnosti</summary>
+                    <div class="details-content">
+                        <p>Moderný svet v mene efektivity oddelil intelektuálny výkon od morálnej zrelosti. Staré historické školy to robili presne opačne – do vzdelávania vkladali tvrdé "hardvérové filtre".</p>
+                        <details class="level-3">
+                            <summary>Úroveň 3: Hardvérové filtre historických škôl</summary>
+                            <div class="details-content">
+                                <ul>
+                                    <li><strong>Hermetici a Alchymisti:</strong> Proces premeny hmoty vyžadoval askézu a potlačenie ega (<em>Solve et Coagula</em>).</li>
+                                    <li><strong>Mníšske rády:</strong> Kresťanská mystika chránila archívy heslom <a href="https://sk.wikipedia.org/wiki/Benedikt_z_Nursie" class="wiki-link" data-title="Ora et labora" data-summary="Mníšske pravidlo sv. Benedikta. Prístup ku knihám si vyžadoval pokoru z ťažkej fyzickej práce." onclick="openSidePanel(event, this)">Ora et labora</a>.</li>
+                                    <li><strong>Kabala:</strong> Štúdium (<em>Sod</em>) bolo prístupné až po 40. roku pre ženatých. Záväzok rodine slúžil ako kotva proti <a href="https://sk.wikipedia.org/wiki/Technologick%C3%A1_singularita" class="wiki-link" data-title="Singularita (psychologická deštrukcia)" data-summary="Stav, kedy mozog nedokáže spracovať exponenciálny nárast informačných vhľadov." onclick="openSidePanel(event, this)">šialenstvu z vhľadu</a>.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>4. Architektúra únikového východu (Paralelná polis)</h2>
+                <p>Svetielko nenájdeme v oprave starých centralizovaných inštitúcií. Únikový východ spočíva v budovaní <a href="https://sk.wikipedia.org/wiki/Paraleln%C3%AD_polis" class="wiki-link" data-title="Paralelná polis" data-summary="Koncept Václava Bendu. Vytváranie nezávislých štruktúr paralelne popri zlyhávajúcom štátnom systéme." onclick="openSidePanel(event, this)">Paralelnej polis</a>. Ak odovzdávame ďalším generáciám mocné technológie (ako 3D tlač, robotiku či AI), musíme do ich vzdelávania vrátiť prísne morálne filtre.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="150" cy="100" r="50" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="10 5" />
+                        <circle cx="150" cy="100" r="30" fill="#e11d48" opacity="0.5" />
+                        <text x="150" y="170" fill="#e11d48" font-size="12" text-anchor="middle">Zlyhávajúci centrálny systém</text>
+                        <path d="M 220 100 L 320 100" fill="none" class="svg-grid" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="4" />
+                        <circle cx="450" cy="50" r="15" fill="#10b981" />
+                        <circle cx="400" cy="100" r="20" fill="#10b981" />
+                        <circle cx="500" cy="100" r="18" fill="#10b981" />
+                        <circle cx="450" cy="150" r="15" fill="#10b981" />
+                        <line x1="400" y1="100" x2="450" y2="50" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="50" x2="500" y2="100" stroke="#10b981" stroke-width="2" />
+                        <line x1="500" y1="100" x2="450" y2="150" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="150" x2="400" y2="100" stroke="#10b981" stroke-width="2" />
+                        <text x="450" y="185" fill="#10b981" font-size="12" text-anchor="middle">Bunková štruktúra (Exokortex)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Úroveň 2: Haptická realita a záchrana poznania</summary>
+                    <div class="details-content">
+                        <p>Únikový východ stojí na záchrane <strong>haptickej reality</strong> – fyzického remesla a práce s hmotou, pretože algoritmus nedokáže oklamať gravitáciu.</p>
+                        <details class="level-3">
+                            <summary>Úroveň 3: Budovanie decentralizovaného Exokortexu</summary>
+                            <div class="details-content">
+                                <p>Komunity si musia budovať vlastný <a href="https://sk.wikipedia.org/wiki/Exokortex" class="wiki-link" data-title="Exokortex" data-summary="Systém rozšírenia ľudského intelektu, ktorý slúži ako externá pamäť mimo kontroly centrálnych platforiem." onclick="openSidePanel(event, this)">exokortex</a>. Budúcnosť prežije v asymetrických, bunkových sieťach – v rukách rodín s nadhľadom, ktoré prenesú civilizačný kód do ďalšieho pulzu dejín.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Zavrieť Úroveň 2 ▲</button>
+                    </div>
+                </details>
+            </div>
+
+            <!-- ================= EN VERZIA ================= -->
+            <div id="content-en" class="lang-section">
+                <h2>1. The End of the Linear Illusion and the Division of the World</h2>
+                <p>The story of global transformation can be personified in the trajectory of <a href="https://en.wikipedia.org/wiki/Jeffrey_Sachs" class="wiki-link" data-title="Jeffrey Sachs" data-summary="American economist, originally known as the architect of 'shock therapy'. Today, a critic of US foreign policy and advocate of multipolarity." onclick="openSidePanel(event, this)">Jeffrey Sachs</a>. In the 1990s, he served as the uncompromising architect of economic transformation. Today, however, in his letters to the German Chancellor, he appeals for a halt to militarization and calls for diplomatic compromises with non-Western powers. The architects of globalization realized their building is falling because they naively believed in a linear end of history.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs><marker id="arrow-en" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" /></marker></defs>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-grid" stroke-width="2" />
+                        <circle cx="100" cy="100" r="6" fill="#e11d48" />
+                        <text x="100" y="80" class="svg-text" font-size="14" text-anchor="middle">Yalta (1945)</text>
+                        <text x="100" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Spheres of influence</text>
+                        <circle cx="300" cy="100" r="6" fill="#0ea5e9" />
+                        <text x="300" y="80" class="svg-text" font-size="14" text-anchor="middle">Malta (1989)</text>
+                        <text x="300" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Unification</text>
+                        <path d="M 300 100 Q 400 30 500 30" fill="none" stroke="#0ea5e9" stroke-width="3" marker-end="url(#arrow-en)" />
+                        <path d="M 300 100 Q 400 170 500 170" fill="none" stroke="#e11d48" stroke-width="3" marker-end="url(#arrow-en)" />
+                        <text x="500" y="20" fill="#0ea5e9" font-size="14" text-anchor="middle">Western bloc</text>
+                        <text x="500" y="190" fill="#e11d48" font-size="14" text-anchor="middle">New Yalta (Multipolarity)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Level 2: Systemic Error and Asymmetric Realism</summary>
+                    <div class="details-content">
+                        <p>Western elites made a fundamental mistake after 1989. They believed that importing Western economic hardware would automatically change the cultural software in Russia or China. They applied linear thinking to a nonlinear living system. The global <a href="https://en.wikipedia.org/wiki/Hegemony" class="wiki-link" data-title="Hegemony" data-summary="Political and military dominance of one state (or bloc) over others, setting the rules of the global system." onclick="openSidePanel(event, this)">hegemony</a> of the West thus shattered against the cultural specifics of other civilizations.</p>
+                        <details class="level-3">
+                            <summary>Level 3: Historical Symmetry of Yalta and Malta (Anatomy of Sachs' Error)</summary>
+                            <div class="details-content">
+                                <p>If the <a href="https://en.wikipedia.org/wiki/Yalta_Conference" class="wiki-link" data-title="Yalta Conference (1945)" data-summary="A meeting of powers where they cynically but pragmatically divided the world, paradoxically bringing the long-term structural stability of the Cold War." onclick="openSidePanel(event, this)">Yalta Conference</a> in 1945 was a pragmatic division of spheres of influence and <a href="https://en.wikipedia.org/wiki/Malta_Summit" class="wiki-link" data-title="Malta Summit (1989)" data-summary="A meeting symbolically ending the Cold War, leading to 30 years of Western globalization." onclick="openSidePanel(event, this)">Malta (1989)</a> was the illusion of a single rational world, today is the sobering up.</p>
+                                <ul>
+                                    <li><strong>Harvard's Linear Pride (1990s):</strong> Sachs' story illustrates this systemic error. He applied 'shock therapy'—the belief that rapid privatization would automatically rewrite democratic institutions. It was an engineering error ignoring cultural inertia, leading to massive oligarchization.</li>
+                                    <li><strong>Asymmetric Realism (Today):</strong> A single-pole system grew to such complexity that Washington could not logistically maintain it. The universal code stopped working. A New Yalta is emerging where new structures (like BRICS) build their own protocols outside the original central server.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>2. The Samsaric Breathing of Empires</h2>
+                <p>What we are experiencing today is the culmination of macrocycles. The global economy pulses in phases resembling breathing—expansion and integration alternate with a phase of growing <a href="https://en.wikipedia.org/wiki/Entropy_(sociology)" class="wiki-link" data-title="Social Entropy" data-summary="The measure of disorder, chaos, and breakdown of internal structure in a social or economic system." onclick="openSidePanel(event, this)">entropy</a>. Every hegemon eventually overloads because it prioritizes short-term financial gain over sustainable service to its own industrial base.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 50 100 Q 150 -50 250 100 T 450 100" fill="none" class="svg-grid" stroke-width="2" stroke-dasharray="5" />
+                        <path d="M 50 100 Q 150 -50 250 100" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <path d="M 250 100 Q 350 250 450 100" fill="none" stroke="#e11d48" stroke-width="4" />
+                        <text x="150" y="30" fill="#0ea5e9" font-size="14" text-anchor="middle">Inhale (Expansion and Profit)</text>
+                        <text x="350" y="180" fill="#e11d48" font-size="14" text-anchor="middle">Exhale (Entropy and Decline)</text>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-text" stroke-width="1" />
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Level 2: Anatomy of an Artificial Financial Inhale</summary>
+                    <div class="details-content">
+                        <p>A beautiful example is the <a href="https://en.wikipedia.org/wiki/Dawes_Plan" class="wiki-link" data-title="Dawes Plan (1924)" data-summary="An American financial plan that poured loans into post-WWI Germany. It artificially stabilized a system that collapsed when loans were withdrawn." onclick="openSidePanel(event, this)">Dawes Plan</a> in interwar Germany. Wall Street created an artificial financial circle lacking a real economic anchor. The result was disaster, radicalism, and monetary death.</p>
+                        <details class="level-3">
+                            <summary>Level 3: Offshoring and Fictitious Capital</summary>
+                            <div class="details-content">
+                                <p>Today's globalization runs on similar defective code. The West massively offshored its real industry to Asia for corporate margins, basing its domestic economy on services and <a href="https://en.wikipedia.org/wiki/Fictitious_capital" class="wiki-link" data-title="Fictitious Capital" data-summary="Value not backed by real material production (derivatives, inflated stocks), representing only a claim to future uncertain profits." onclick="openSidePanel(event, this)">fictitious capital</a>. Harmonizing profit and service will require a return to local production, otherwise the system faces <a href="https://en.wikipedia.org/wiki/Hyperinflation" class="wiki-link" data-title="Hyperinflation" data-summary="Uncontrollable and extremely rapid devaluation of currency, usually caused by printing money unbacked by real production." onclick="openSidePanel(event, this)">hyperinflation</a>.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>3. The Exponential Wedge and Algorithmic Degradation</h2>
+                <p>An unprecedented factor has entered this pulsation: growth asymmetry. While AI development accelerates exponentially, society's moral equipment is degraded by the digital <a href="https://en.wikipedia.org/wiki/Panopticon" class="wiki-link" data-title="Panopticon" data-summary="An architectural concept of a prison where the guard sees all prisoners, but they don't see him. Today, a metaphor for digital surveillance." onclick="openSidePanel(event, this)">panopticon</a> of social networks. We are approaching a moment of systemic <a href="https://en.wikipedia.org/wiki/Bifurcation_theory" class="wiki-link" data-title="Bifurcation (systems theory)" data-summary="A critical point in the development of a nonlinear system where a small change in parameters leads to sudden splitting of system behavior." onclick="openSidePanel(event, this)">bifurcation</a>, where paleolithic instincts have been handed a digital nuclear briefcase.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="50" y1="200" x2="550" y2="200" class="svg-grid" stroke-width="2" />
+                        <line x1="50" y1="200" x2="50" y2="20" class="svg-grid" stroke-width="2" />
+                        <path d="M 50 180 Q 300 170 500 30" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <text x="510" y="40" fill="#0ea5e9" font-size="14">Technology (AI)</text>
+                        <path d="M 50 150 L 500 190" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="6" />
+                        <text x="510" y="190" fill="#e11d48" font-size="14">Crowd Morality</text>
+                        <circle cx="280" cy="165" r="7" fill="#fbbf24" />
+                        <text x="280" y="145" fill="#fbbf24" font-size="14" text-anchor="middle">Singularity of Fragility</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Level 2: Separation of Intellect and Virtue</summary>
+                    <div class="details-content">
+                        <p>In the name of efficiency, the modern world separated intellectual performance from moral maturity. Old historical schools did the exact opposite—inserting harsh "hardware filters" into education.</p>
+                        <details class="level-3">
+                            <summary>Level 3: Hardware Filters of Historical Schools</summary>
+                            <div class="details-content">
+                                <ul>
+                                    <li><strong>Hermetics and Alchemists:</strong> The process of matter transformation required asceticism and ego suppression.</li>
+                                    <li><strong>Monastic orders:</strong> Christian mysticism protected archives with the motto <a href="https://en.wikipedia.org/wiki/Ora_et_labora" class="wiki-link" data-title="Ora et labora" data-summary="The monastic rule of St. Benedict. Access to books required humility gained through hard physical labor." onclick="openSidePanel(event, this)">Ora et labora</a>.</li>
+                                    <li><strong>Kabbalah:</strong> Deep study was accessible only after age 40 for married men. Family commitment served as an anchor against the <a href="https://en.wikipedia.org/wiki/Technological_singularity" class="wiki-link" data-title="Singularity (psychological destruction)" data-summary="A state where the brain cannot process the exponential growth of informational insights." onclick="openSidePanel(event, this)">madness of insight</a>.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 2 ▲</button>
+                    </div>
+                </details>
+
+                <h2>4. The Architecture of the Escape Hatch (Parallel Polis)</h2>
+                <p>We won't find the light in repairing old centralized institutions. The escape hatch lies in building a <a href="https://en.wikipedia.org/wiki/Parallel_Polis" class="wiki-link" data-title="Parallel Polis" data-summary="A concept by Václav Benda. Creating independent educational and economic structures that function parallel to a failing state system." onclick="openSidePanel(event, this)">Parallel Polis</a>. If we pass powerful technologies (like 3D printing or AI) to next generations, we must return strict moral filters to their education.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="150" cy="100" r="50" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="10 5" />
+                        <circle cx="150" cy="100" r="30" fill="#e11d48" opacity="0.5" />
+                        <text x="150" y="170" fill="#e11d48" font-size="12" text-anchor="middle">Failing Central System</text>
+                        <path d="M 220 100 L 320 100" fill="none" class="svg-grid" stroke-width="2" marker-end="url(#arrow-en)" stroke-dasharray="4" />
+                        <circle cx="450" cy="50" r="15" fill="#10b981" />
+                        <circle cx="400" cy="100" r="20" fill="#10b981" />
+                        <circle cx="500" cy="100" r="18" fill="#10b981" />
+                        <circle cx="450" cy="150" r="15" fill="#10b981" />
+                        <line x1="400" y1="100" x2="450" y2="50" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="50" x2="500" y2="100" stroke="#10b981" stroke-width="2" />
+                        <line x1="500" y1="100" x2="450" y2="150" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="150" x2="400" y2="100" stroke="#10b981" stroke-width="2" />
+                        <text x="450" y="185" fill="#10b981" font-size="12" text-anchor="middle">Cellular Structure (Exocortex)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>Level 2: Haptic Reality and Saving Knowledge</summary>
+                    <div class="details-content">
+                        <p>The escape hatch stands on saving <strong>haptic reality</strong>—physical craft and working with matter, because algorithms cannot trick gravity.</p>
+                        <details class="level-3">
+                            <summary>Level 3: Building a Decentralized Exocortex</summary>
+                            <div class="details-content">
+                                <p>Communities must build their own <a href="https://en.wikipedia.org/wiki/Exocortex" class="wiki-link" data-title="Exocortex" data-summary="A system of human intellect expansion serving as external memory outside the control of central platforms." onclick="openSidePanel(event, this)">exocortex</a>. The future will survive in asymmetric, cellular networks—in the hands of insightful families who will carry the civilizational code to the next pulse of history.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 3 ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Close Level 2 ▲</button>
+                    </div>
+                </details>
+            </div>
+
+            <!-- ================= HU VERZIA ================= -->
+            <div id="content-hu" class="lang-section">
+                <h2>1. A lineáris illúzió vége és a világ felosztása</h2>
+                <p>A globális transzformáció története személyesíthető meg <a href="https://hu.wikipedia.org/wiki/Jeffrey_Sachs" class="wiki-link" data-title="Jeffrey Sachs" data-summary="Amerikai közgazdász, a 'sokkterápia' építésze. Ma az amerikai külpolitika kritikusa és a multipolaritás szószólója." onclick="openSidePanel(event, this)">Jeffrey Sachs</a> pályafutásában. A 90-es években a gazdasági átalakulás kompromisszumot nem ismerő építésze volt. Ma a diplomáciai kompromisszumokra hív fel. A globalizáció építészei rájöttek, hogy építményük leomlik, mert naivan hittek a történelem lineáris végében.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs><marker id="arrow-hu" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" /></marker></defs>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-grid" stroke-width="2" />
+                        <circle cx="100" cy="100" r="6" fill="#e11d48" />
+                        <text x="100" y="80" class="svg-text" font-size="14" text-anchor="middle">Jalta (1945)</text>
+                        <text x="100" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Befolyási övezetek</text>
+                        <circle cx="300" cy="100" r="6" fill="#0ea5e9" />
+                        <text x="300" y="80" class="svg-text" font-size="14" text-anchor="middle">Málta (1989)</text>
+                        <text x="300" y="125" class="svg-dim-text" font-size="11" text-anchor="middle">Egyesítés</text>
+                        <path d="M 300 100 Q 400 30 500 30" fill="none" stroke="#0ea5e9" stroke-width="3" marker-end="url(#arrow-hu)" />
+                        <path d="M 300 100 Q 400 170 500 170" fill="none" stroke="#e11d48" stroke-width="3" marker-end="url(#arrow-hu)" />
+                        <text x="500" y="20" fill="#0ea5e9" font-size="14" text-anchor="middle">Nyugati blokk</text>
+                        <text x="500" y="190" fill="#e11d48" font-size="14" text-anchor="middle">Új Jalta (Multipolaritás)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>2. Szint: Rendszerszintű tévedés és aszimmetrikus realizmus</summary>
+                    <div class="details-content">
+                        <p>A nyugati elitek alapvető hibát követtek el. Azt hitték, hogy a nyugati hardver importja automatikusan megváltoztatja a kulturális szoftvert. Lineáris gondolkodást alkalmaztak egy nemlineáris élő rendszerre. A Nyugat globális <a href="https://hu.wikipedia.org/wiki/Hegem%C3%B3nia" class="wiki-link" data-title="Hegemónia" data-summary="Egy állam politikai és katonai uralma a többi felett." onclick="openSidePanel(event, this)">hegemóniája</a> darabokra tört más civilizációk kulturális sajátosságain.</p>
+                        <details class="level-3">
+                            <summary>3. Szint: Jalta és Málta történelmi szimmetriája</summary>
+                            <div class="details-content">
+                                <p>Ha <a href="https://hu.wikipedia.org/wiki/Jaltai_konferencia" class="wiki-link" data-title="Jaltai konferencia (1945)" data-summary="A hatalmak találkozója, ahol cinikusan, de pragmatikusan felosztották a világot." onclick="openSidePanel(event, this)">Jalta</a> a befolyási övezetek pragmatikus felosztása volt, és <a href="https://hu.wikipedia.org/wiki/M%C3%A1ltai_cs%C3%BAcstal%C3%A1lkoz%C3%B3" class="wiki-link" data-title="Máltai csúcstalálkozó (1989)" data-summary="A hidegháborút szimbolikusan lezáró találkozó." onclick="openSidePanel(event, this)">Málta</a> az egyetlen racionális világ illúziója, a ma a kijózanodásé.</p>
+                                <ul>
+                                    <li><strong>A harvardi lineáris büszkeség:</strong> A 'sokkterápia' alkalmazása mérnöki tévedés volt, amely figyelmen kívül hagyta a kulturális tehetetlenséget, és masszív oligarchizációhoz vezetett.</li>
+                                    <li><strong>Aszimmetrikus realizmus:</strong> Egy Új Jalta van kialakulóban, ahol az új struktúrák (mint a BRICS) saját protokollokat építenek az eredeti központi szerveren kívül.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 3. Szint ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 2. Szint ▲</button>
+                    </div>
+                </details>
+
+                <h2>2. A birodalmak szamszárikus légzése</h2>
+                <p>Amit ma tapasztalunk, az a makrociklusok betetőzése. A világgazdaság lüktet, a tágulás és az integráció váltakozik a növekvő <a href="https://hu.wikipedia.org/wiki/Entr%C3%B3pia" class="wiki-link" data-title="Szociális entrópiája" data-summary="A rendetlenség, a káosz mértéke egy társadalmi rendszerben." onclick="openSidePanel(event, this)">entrópia</a> szakaszával.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 50 100 Q 150 -50 250 100 T 450 100" fill="none" class="svg-grid" stroke-width="2" stroke-dasharray="5" />
+                        <path d="M 50 100 Q 150 -50 250 100" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <path d="M 250 100 Q 350 250 450 100" fill="none" stroke="#e11d48" stroke-width="4" />
+                        <text x="150" y="30" fill="#0ea5e9" font-size="14" text-anchor="middle">Belégzés (Bővülés és Profit)</text>
+                        <text x="350" y="180" fill="#e11d48" font-size="14" text-anchor="middle">Kilégzés (Entrópia és Hanyatlás)</text>
+                        <line x1="50" y1="100" x2="550" y2="100" class="svg-text" stroke-width="1" />
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>2. Szint: A mesterséges pénzügyi lélegzetvétel anatómiája</summary>
+                    <div class="details-content">
+                        <p>Remek példa erre a két világháború közötti <a href="https://hu.wikipedia.org/wiki/Dawes-terv" class="wiki-link" data-title="Dawes-terv" data-summary="Amerikai pénzügyi terv, amely mesterségesen stabilizálta a rendszert." onclick="openSidePanel(event, this)">Dawes-terv</a>. A Wall Street létrehozott egy mesterséges pénzügyi kört valós gazdasági horgony nélkül.</p>
+                        <details class="level-3">
+                            <summary>3. Szint: Offshoring és fiktív tőke</summary>
+                            <div class="details-content">
+                                <p>A mai globalizáció hasonló hibás kódon fut. A Nyugat masszívan áthelyezte valós iparát, a szolgáltatásokra és a <a href="https://hu.wikipedia.org/wiki/Fikt%C3%ADv_t%C5%91ke" class="wiki-link" data-title="Fiktív tőke" data-summary="Olyan érték, amely mögött nincs reális anyagi termelés." onclick="openSidePanel(event, this)">fiktív tőkére</a> alapozva. Ennek hiányában a rendszerre <a href="https://hu.wikipedia.org/wiki/Hiperinfl%C3%A1ci%C3%B3" class="wiki-link" data-title="Hiperinfláció" data-summary="A valuta ellenőrizhetetlen elértéktelenedése." onclick="openSidePanel(event, this)">hiperinfláció</a> vár.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 3. Szint ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 2. Szint ▲</button>
+                    </div>
+                </details>
+
+                <h2>3. Exponenciális ék és algoritmikus degradáció</h2>
+                <p>Példátlan tényező lépett be ebbe a lüktetésbe: a növekedési aszimmetria. Miközben az MI fejlődése exponenciális, a társadalom morális felszereltsége degradálódik a digitális <a href="https://hu.wikipedia.org/wiki/Panoptikum" class="wiki-link" data-title="Panoptikum" data-summary="Börtön koncepció, ma a digitális megfigyelés metaforája." onclick="openSidePanel(event, this)">panoptikum</a> hatására.</p>
+
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="50" y1="200" x2="550" y2="200" class="svg-grid" stroke-width="2" />
+                        <line x1="50" y1="200" x2="50" y2="20" class="svg-grid" stroke-width="2" />
+                        <path d="M 50 180 Q 300 170 500 30" fill="none" stroke="#0ea5e9" stroke-width="4" />
+                        <text x="510" y="40" fill="#0ea5e9" font-size="14">Technológia (MI)</text>
+                        <path d="M 50 150 L 500 190" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="6" />
+                        <text x="510" y="190" fill="#e11d48" font-size="14">Tömegerkölcs</text>
+                        <circle cx="280" cy="165" r="7" fill="#fbbf24" />
+                        <text x="280" y="145" fill="#fbbf24" font-size="14" text-anchor="middle">Törékenység Szingularitása</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>2. Szint: Az értelem és az erény elválasztása</summary>
+                    <div class="details-content">
+                        <p>A modern világ elválasztotta a szellemi teljesítményt az erkölcsi érettségtől. A régi történelmi iskolák pont fordítva csinálták.</p>
+                        <details class="level-3">
+                            <summary>3. Szint: A történelmi iskolák hardveres szűrői</summary>
+                            <div class="details-content">
+                                <ul>
+                                    <li><strong>Hermetikusok:</strong> Az anyag átalakítása aszkézist igényelt (<em>Solve et Coagula</em>).</li>
+                                    <li><strong>Szerzetesrendek:</strong> Az <a href="https://hu.wikipedia.org/wiki/Ora_et_labora" class="wiki-link" data-title="Ora et labora" data-summary="Bencés szabály. A tudáshoz alázat kellett." onclick="openSidePanel(event, this)">Ora et labora</a> elve szerinti kemény fizikai munka.</li>
+                                    <li><strong>Kabbala:</strong> A mély tanulmányozás (<em>Sod</em>) csak 40 éves kor felett, házasok számára volt elérhető.</li>
+                                </ul>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 3. Szint ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 2. Szint ▲</button>
+                    </div>
+                </details>
+
+                <h2>4. A vészkijárat építészete (Párhuzamos polisz)</h2>
+                <p>A vészkijárat egy <a href="https://hu.wikipedia.org/wiki/P%C3%A1rhuzamos_polisz" class="wiki-link" data-title="Párhuzamos polisz" data-summary="Független struktúrák létrehozása a kudarcot valló állami rendszer mellett." onclick="openSidePanel(event, this)">Párhuzamos polisz</a> felépítésében rejlik. Szigorú erkölcsi szűrőket kell visszahoznunk az oktatásba.</p>
+                
+                <div class="graph-container">
+                    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="150" cy="100" r="50" fill="none" stroke="#e11d48" stroke-width="4" stroke-dasharray="10 5" />
+                        <circle cx="150" cy="100" r="30" fill="#e11d48" opacity="0.5" />
+                        <text x="150" y="170" fill="#e11d48" font-size="12" text-anchor="middle">Kudarcot valló központi rendszer</text>
+                        <path d="M 220 100 L 320 100" fill="none" class="svg-grid" stroke-width="2" marker-end="url(#arrow-hu)" stroke-dasharray="4" />
+                        <circle cx="450" cy="50" r="15" fill="#10b981" />
+                        <circle cx="400" cy="100" r="20" fill="#10b981" />
+                        <circle cx="500" cy="100" r="18" fill="#10b981" />
+                        <circle cx="450" cy="150" r="15" fill="#10b981" />
+                        <line x1="400" y1="100" x2="450" y2="50" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="50" x2="500" y2="100" stroke="#10b981" stroke-width="2" />
+                        <line x1="500" y1="100" x2="450" y2="150" stroke="#10b981" stroke-width="2" />
+                        <line x1="450" y1="150" x2="400" y2="100" stroke="#10b981" stroke-width="2" />
+                        <text x="450" y="185" fill="#10b981" font-size="12" text-anchor="middle">Cellás struktúra (Exocortex)</text>
+                    </svg>
+                </div>
+
+                <details class="level-2">
+                    <summary>2. Szint: Haptikus valóság és a tudás megmentése</summary>
+                    <div class="details-content">
+                        <p>A vészkijárat a <strong>haptikus valóság</strong> - a fizikai mesterség - megmentésén alapul, mert az algoritmus nem tudja becsapni a gravitációt.</p>
+                        <details class="level-3">
+                            <summary>3. Szint: A decentralizált Exocortex felépítése</summary>
+                            <div class="details-content">
+                                <p>A közösségeknek saját <a href="https://hu.wikipedia.org/wiki/Exocortex" class="wiki-link" data-title="Exocortex" data-summary="Az emberi értelem kiterjesztésének rendszere külső memóriaként." onclick="openSidePanel(event, this)">exocortexet</a> kell építeniük. A jövő az aszimmetrikus, cellás hálózatokban marad fenn.</p>
+                                <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 3. Szint ▲</button>
+                            </div>
+                        </details>
+                        <button class="close-btn" onclick="this.closest('details').removeAttribute('open');">Bezár 2. Szint ▲</button>
+                    </div>
+                </details>
+            </div>
+
+        </div>
+
+        <div class="footer-note">
+            <span class="lang-content" data-lang="sk">Tento článok vygeneroval syntetický štatistický knihovník, blíženec / gemini na základe otázok <a href="../o-mne/">autora</a> (Verzia 1.5 s plnohodnotnými jazykovými a vektorovými prekladmi).</span>
+            <span class="lang-content" data-lang="en">This article was generated by a synthetic statistical librarian, twin / gemini based on the questions of the <a href="../o-mne/">author</a> (Version 1.5 with full language and vector translations).</span>
+            <span class="lang-content" data-lang="hu">Ezt a cikket egy szintetikus statisztikai könyvtáros, iker / gemini generálta a <a href="../o-mne/">szerző</a> kérdései alapján (Verzió 1.5 teljes nyelvi és vektoros fordításokkal).</span></div>
+    </div>
+
+    <!-- Bočný panel (Split Screen) -->
+    <div id="side-panel">
+        <button class="close-panel-btn" onclick="closeSidePanel()">✖ Zavrieť panel</button>
+        <h3 id="side-title">Názov</h3>
+        <p id="side-summary">Zhrnutie pojmu.</p>
+        <a id="side-link" href="#" target="_blank" class="external-btn">Otvoriť celý článok v novom okne ↗</a>
+    </div>
+
+</div>
+
+<script>
+    // --- 1. Logika Témy ---
+    const toggleBtn = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        let currentTheme = document.documentElement.getAttribute('data-theme');
+        let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+
+    // --- 2. Logika Jazyka ---
+    function setLang(lang) {
+        document.documentElement.setAttribute('lang', lang);
+        localStorage.setItem('lang', lang);
+        
+        document.querySelectorAll('.top-nav .lang-btn').forEach(btn => btn.classList.remove('active'));
+        const activeNavBtn = document.getElementById('btn-' + lang);
+        if(activeNavBtn) activeNavBtn.classList.add('active');
+
+        document.querySelectorAll('.lang-section').forEach(section => section.classList.remove('active'));
+        const activeSection = document.getElementById('content-' + lang);
+        if(activeSection) activeSection.classList.add('active');
+        
+        // Zmena textu tlacidla zatvorenia bocneho panela
+        const closeBtn = document.querySelector('.close-panel-btn');
+        if(lang === 'sk') closeBtn.innerText = '✖ Zavrieť panel';
+        if(lang === 'en') closeBtn.innerText = '✖ Close panel';
+        if(lang === 'hu') closeBtn.innerText = '✖ Panel bezárása';
+        
+        const externalLinkBtn = document.getElementById('side-link');
+        if(lang === 'sk') externalLinkBtn.innerText = 'Otvoriť celý článok v novom okne ↗';
+        if(lang === 'en') externalLinkBtn.innerText = 'Open full article in new window ↗';
+        if(lang === 'hu') externalLinkBtn.innerText = 'Teljes cikk megnyitása új ablakban ↗';
+    }
+
+    const savedLang = localStorage.getItem('lang') || 'sk';
+    setLang(savedLang);
+
+    // --- 3. Funkcie Bočného Panela ---
+    function openSidePanel(event, element) {
+        event.preventDefault(); 
+        const title = element.getAttribute('data-title');
+        const summary = element.getAttribute('data-summary');
+        const url = element.getAttribute('href');
+
+        document.getElementById('side-title').innerText = title;
+        document.getElementById('side-summary').innerText = summary;
+        document.getElementById('side-link').setAttribute('href', url);
+
+        document.getElementById('app-wrapper').classList.add('split-active');
+    }
+
+    function closeSidePanel() {
+        document.getElementById('app-wrapper').classList.remove('split-active');
+    }
+</script>
+
+</body>
+</html>
