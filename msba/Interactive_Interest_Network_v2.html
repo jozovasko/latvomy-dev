@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Name-Interest Graph</title>
+
+    <!-- Vis.js Library for Graph Visualization -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Controls */
+        .controls {
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.15s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.btn-save {
+            background-color: #28a745;
+        }
+        button.btn-save:hover {
+            background-color: #218838;
+        }
+
+        button.btn-load {
+            background-color: #17a2b8;
+        }
+        button.btn-load:hover {
+            background-color: #138496;
+        }
+
+        button.delete-btn {
+            background-color: #dc3545;
+            padding: 4px 8px;
+            width: 100%;
+        }
+        button.delete-btn:hover {
+            background-color: #bd2130;
+        }
+
+        /* Resizable Table Styling */
+        .table-container {
+            overflow-x: auto;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding-bottom: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: auto; /* Žiadne umelé rozťahovanie na 100%, šírku riadia presné pixely */
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #e9ecef;
+            position: relative;
+            user-select: none;
+            font-weight: bold;
+        }
+
+        /* Lišta na zmenu šírky stĺpca */
+        .col-resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+            z-index: 2;
+        }
+
+        .col-resizer:hover,
+        .col-resizer.resizing {
+            background-color: #007bff;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Graph Output Container */
+        #network-graph {
+            width: 100%;
+            height: 560px;
+            border: 2px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Interactive Interest Network</h2>
+
+    <!-- Centrálny dynamický zoznam záujmov -->
+    <datalist id="interestsList"></datalist>
+
+    <div class="container">
+        <!-- Table Section -->
+        <div>
+            <div class="controls">
+                <button onclick="addRow()">+ Pridať osobu</button>
+                <button onclick="addInterestColumn()">+ Pridať stĺpec záujmu</button>
+                <button class="btn-save" onclick="exportToJson()">💾 Uložiť do JSON</button>
+                <button class="btn-load" onclick="document.getElementById('fileInput').click()">📂 Načítať z JSON</button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="importFromJson(event)">
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr id="headerRow"></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Graph Diagram Section -->
+        <div>
+            <h3>Grafická sieť vzťahov</h3>
+            <div id="network-graph"></div>
+        </div>
+    </div>
+
+    <script>
+        let interestCount = 2;
+        let network = null;
+
+        // Globálny register uložených záujmov
+        let registeredInterests = new Set(["Coding", "Gaming", "Cooking", "Music"]);
+
+        // Predvolené dáta
+        const initialData = [
+            { name: "Adam", interests: ["Coding", "Gaming"] },
+            { name: "David", interests: ["Gaming", "Cooking"] },
+            { name: "Filip", interests: ["Coding", "Music"] }
+        ];
+
+        window.onload = function() {
+            refreshDatalist();
+            populateInitialData();
+            initNetwork();
+            updateGraph();
+        };
+
+        function refreshDatalist() {
+            const dl = document.getElementById('interestsList');
+            dl.innerHTML = '';
+            Array.from(registeredInterests).sort().forEach(item => {
+                if (item && item.trim() !== '') {
+                    const opt = document.createElement('option');
+                    opt.value = item;
+                    dl.appendChild(opt);
+                }
+            });
+        }
+
+        function commitInterest(val) {
+            if (!val) return;
+            val = val.trim();
+            if (val !== '' && !registeredInterests.has(val)) {
+                registeredInterests.add(val);
+                refreshDatalist();
+            }
+        }
+
+        function handleInterestKeyDown(e, inputElem) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                commitInterest(inputElem.value);
+                inputElem.blur();
+                updateGraph();
+            }
+        }
+
+        function handleInterestChange(inputElem) {
+            commitInterest(inputElem.value);
+            updateGraph();
+        }
+
+        // Opravené plynulé rozťahovanie stĺpcov bez odskakovania
+        function makeResizable(th) {
+            const resizer = document.createElement('div');
+            resizer.className = 'col-resizer';
+            th.appendChild(resizer);
+
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const table = th.closest('table');
+                const startX = e.pageX;
+                const startWidth = th.getBoundingClientRect().width;
+                const startTableWidth = table.getBoundingClientRect().width;
+
+                // 1. Zafixovanie reálnych pixelových šírok všetkých stĺpcov pred štartom posunu
+                const allThs = table.querySelectorAll('th');
+                allThs.forEach(cell => {
+                    cell.style.width = cell.getBoundingClientRect().width + 'px';
+                });
+                table.style.width = startTableWidth + 'px';
+
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+
+                function onMouseMove(e) {
+                    const diff = e.pageX - startX;
+                    const newWidth = Math.max(65, startWidth + diff);
+                    const actualDiff = newWidth - startWidth;
+
+                    // Posun presne pod kurzorom bez ovplyvnenia susedných stĺpcov
+                    th.style.width = newWidth + 'px';
+                    table.style.width = (startTableWidth + actualDiff) + 'px';
+                }
+
+                function onMouseUp() {
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        function populateInitialData() {
+            renderFromDataArray(initialData, 2);
+        }
+
+        function renderFromDataArray(dataList, colCount) {
+            interestCount = colCount;
+            const table = document.getElementById('dataTable');
+            const headerRow = document.getElementById('headerRow');
+            headerRow.innerHTML = '';
+
+            // 1. Hlavička: Meno
+            const thName = document.createElement('th');
+            thName.innerText = 'Meno';
+            thName.style.width = '180px';
+            makeResizable(thName);
+            headerRow.appendChild(thName);
+
+            // 2. Hlavičky: Záujmy
+            for (let i = 1; i <= interestCount; i++) {
+                const th = document.createElement('th');
+                th.innerText = `Záujem ${i}`;
+                th.style.width = '200px';
+                makeResizable(th);
+                headerRow.appendChild(th);
+            }
+
+            // 3. Hlavička: Akcie
+            const thAction = document.createElement('th');
+            thAction.innerText = 'Akcie';
+            thAction.style.width = '100px';
+            headerRow.appendChild(thAction);
+
+            // Nastavenie celkovej šírky tabuľky na súčet stĺpcov
+            table.style.width = (180 + (interestCount * 200) + 100) + 'px';
+
+            // Riadky tabuľky
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            dataList.forEach(item => {
+                const tr = document.createElement('tr');
+                let rowHTML = `<td><input type="text" value="${escapeHtml(item.name || '')}" oninput="updateGraph()"></td>`;
+                
+                for (let i = 0; i < interestCount; i++) {
+                    const val = (item.interests && item.interests[i]) ? item.interests[i] : '';
+                    if (val) commitInterest(val);
+
+                    rowHTML += `<td>
+                        <input type="text" 
+                               list="interestsList" 
+                               value="${escapeHtml(val)}" 
+                               placeholder="Zadaj alebo vyber..." 
+                               oninput="updateGraph()" 
+                               onkeydown="handleInterestKeyDown(event, this)" 
+                               onchange="handleInterestChange(this)">
+                    </td>`;
+                }
+                rowHTML += `<td><button class="delete-btn" onclick="removeRow(this)">Odstrániť</button></td>`;
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+
+            refreshDatalist();
+        }
+
+        function addRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            
+            let rowHTML = `<td><input type="text" placeholder="Meno..." oninput="updateGraph()"></td>`;
+            for (let i = 0; i < interestCount; i++) {
+                rowHTML += `<td>
+                    <input type="text" 
+                           list="interestsList" 
+                           placeholder="Zadaj alebo vyber..." 
+                           oninput="updateGraph()" 
+                           onkeydown="handleInterestKeyDown(event, this)" 
+                           onchange="handleInterestChange(this)">
+                </td>`;
+            }
+            rowHTML += `<td><button class="delete-btn" onclick="removeRow(this)">Odstrániť</button></td>`;
+            
+            tr.innerHTML = rowHTML;
+            tbody.appendChild(tr);
+        }
+
+        function addInterestColumn() {
+            interestCount++;
+            const table = document.getElementById('dataTable');
+            const headerRow = document.getElementById('headerRow');
+            const tbody = document.getElementById('tableBody');
+
+            const newTh = document.createElement('th');
+            newTh.innerText = `Záujem ${interestCount}`;
+            newTh.style.width = '200px';
+            makeResizable(newTh);
+            headerRow.insertBefore(newTh, headerRow.lastElementChild);
+
+            // Prispôsobenie celkovej šírky tabuľky o nový stĺpec (+200px)
+            const currentTableWidth = table.getBoundingClientRect().width;
+            table.style.width = (currentTableWidth + 200) + 'px';
+
+            for (let tr of tbody.rows) {
+                const newTd = document.createElement('td');
+                newTd.innerHTML = `
+                    <input type="text" 
+                           list="interestsList" 
+                           placeholder="Zadaj alebo vyber..." 
+                           oninput="updateGraph()" 
+                           onkeydown="handleInterestKeyDown(event, this)" 
+                           onchange="handleInterestChange(this)">
+                `;
+                tr.insertBefore(newTd, tr.lastElementChild);
+            }
+        }
+
+        function removeRow(btn) {
+            btn.parentElement.parentElement.remove();
+            updateGraph();
+        }
+
+        function serializeTableData() {
+            const tbody = document.getElementById('tableBody');
+            const rowsData = [];
+
+            for (let row of tbody.rows) {
+                const nameInput = row.cells[0].querySelector('input');
+                const name = nameInput ? nameInput.value.trim() : '';
+
+                const interests = [];
+                for (let i = 1; i <= interestCount; i++) {
+                    const cell = row.cells[i];
+                    if (cell) {
+                        const input = cell.querySelector('input');
+                        interests.push(input ? input.value.trim() : '');
+                    }
+                }
+
+                if (name !== '' || interests.some(item => item !== '')) {
+                    rowsData.push({ name, interests });
+                }
+            }
+
+            return {
+                version: 2,
+                interestCount: interestCount,
+                availableInterests: Array.from(registeredInterests),
+                people: rowsData
+            };
+        }
+
+        function restoreData(dataObj) {
+            if (!dataObj || !dataObj.people) return;
+            if (dataObj.availableInterests && Array.isArray(dataObj.availableInterests)) {
+                registeredInterests = new Set(dataObj.availableInterests);
+            }
+            renderFromDataArray(dataObj.people, dataObj.interestCount || 2);
+            if (network) updateGraph();
+        }
+
+        function exportToJson() {
+            const data = serializeTableData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `siet_zaujmov_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importFromJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    restoreData(JSON.parse(e.target.result));
+                } catch (err) {
+                    alert("Chyba pri spracovaní súboru: " + err.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        function initNetwork() {
+            const container = document.getElementById('network-graph');
+            const data = { nodes: [], edges: [] };
+            const options = {
+                edges: {
+                    arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                    color: { color: '#848484' },
+                    smooth: { type: 'continuous' }
+                },
+                physics: {
+                    stabilization: false,
+                    barnesHut: {
+                        gravitationalConstant: -3500,
+                        springLength: 120,
+                        springConstant: 0.04
+                    }
+                }
+            };
+            network = new vis.Network(container, data, options);
+        }
+
+        function updateGraph() {
+            const tbody = document.getElementById('tableBody');
+            const namesList = [];
+            const interestsMap = new Map();
+            const edges = [];
+
+            for (let row of tbody.rows) {
+                const nameInput = row.cells[0].querySelector('input');
+                const name = nameInput ? nameInput.value.trim() : '';
+
+                if (name !== '') {
+                    if (!namesList.includes(name)) {
+                        namesList.push(name);
+                    }
+
+                    for (let i = 1; i <= interestCount; i++) {
+                        const cell = row.cells[i];
+                        if (!cell) continue;
+                        const interestInput = cell.querySelector('input');
+                        const interest = interestInput ? interestInput.value.trim() : '';
+
+                        if (interest !== '') {
+                            if (!interestsMap.has(interest)) {
+                                interestsMap.set(interest, true);
+                            }
+                            edges.push({ from: name, to: interest });
+                        }
+                    }
+                }
+            }
+
+            // Výpočet jednotnej veľkosti kruhu podľa najdlhšieho mena
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.font = 'bold 15px Arial';
+
+            let maxTextWidth = 30;
+            namesList.forEach(name => {
+                const w = tempCtx.measureText(name).width;
+                if (w > maxTextWidth) maxTextWidth = w;
+            });
+
+            const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
+            const nodes = [];
+
+            // Uzly osôb (rovnaká veľkosť, centrovaný text)
+            namesList.forEach(name => {
+                nodes.push({
+                    id: name,
+                    label: name,
+                    shape: 'custom',
+                    ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
+                        const r = uniformRadius;
+                        return {
+                            drawNode() {
+                                ctx.beginPath();
+                                ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+                                ctx.fillStyle = selected ? '#0056b3' : (hover ? '#0069d9' : '#007bff');
+                                ctx.fill();
+                                ctx.lineWidth = 2.5;
+                                ctx.strokeStyle = selected ? '#003875' : '#0056b3';
+                                ctx.stroke();
+
+                                ctx.font = 'bold 15px Arial';
+                                ctx.fillStyle = '#ffffff';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(name, x, y);
+                            },
+                            nodeDimensions: { width: 2 * r, height: 2 * r }
+                        };
+                    }
+                });
+            });
+
+            // Uzly záujmov
+            interestsMap.forEach((_, interest) => {
+                nodes.push({
+                    id: interest,
+                    label: interest,
+                    shape: 'box',
+                    borderRadius: 8,
+                    color: {
+                        background: '#28a745',
+                        border: '#1e7e34',
+                        highlight: { background: '#218838', border: '#145523' }
+                    },
+                    margin: 10,
+                    font: { color: '#ffffff', size: 14, bold: true }
+                });
+            });
+
+            network.setData({
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            });
+        }
+    </script>
+</body>
+</html>
