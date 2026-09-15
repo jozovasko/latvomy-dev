@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktívna sieť záujmov – Študentský náhľad</title>
+
+    <!-- Vis.js Library for Graph Visualization -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Informačný panel v záhlaví */
+        .info-bar {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 10px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            pointer-events: none;
+        }
+
+        .info-bar h2 {
+            font-size: 1.15rem;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+
+        .info-bar p {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Plátno grafu cez celé okno */
+        #network-graph {
+            width: 100vw;
+            height: 100vh;
+            cursor: grab;
+        }
+
+        #network-graph:active {
+            cursor: grabbing;
+        }
+
+        /* Notifikácia načítania / chyby */
+        #status-msg {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.9);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="info-bar">
+        <h2>Interaktívna sieť záujmov</h2>
+        <p>Preťahuj uzly a skúmaj vzájomné prepojenia</p>
+    </div>
+
+    <div id="status-msg"></div>
+    <div id="network-graph"></div>
+
+    <script>
+        let network = null;
+
+        // Vzorové počiatočné dáta (fallback, ak v URL nie je parameter)
+        const fallbackData = {
+            people: [
+                { name: "Adam", interests: ["Coding", "3D Tlač"] },
+                { name: "David", interests: ["Robotika", "3D Tlač"] },
+                { name: "Filip", interests: ["Coding", "Hudba"] }
+            ]
+        };
+
+        window.onload = function() {
+            initNetwork();
+            loadGraphFromUrl();
+        };
+
+        // Zobrazenie dočasnej správy
+        function showStatus(msg, isError = false) {
+            const el = document.getElementById('status-msg');
+            el.innerText = msg;
+            el.style.backgroundColor = isError ? 'rgba(220, 53, 69, 0.95)' : 'rgba(30, 41, 59, 0.9)';
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 4000);
+        }
+
+        // Parsovanie URL parametra a načítanie JSON dát
+        function loadGraphFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // 1. Spôsob: parameter ?data=cesta_k_suboru.json
+            const dataUrl = urlParams.get('data');
+            // 2. Spôsob: parameter ?json={"people":[...]}
+            const rawJson = urlParams.get('json');
+
+            if (rawJson) {
+                try {
+                    const parsed = JSON.parse(rawJson);
+                    renderGraphFromData(parsed);
+                } catch (e) {
+                    showStatus("Chyba v JSON parametri: " + e.message, true);
+                    renderGraphFromData(fallbackData);
+                }
+            } else if (dataUrl) {
+                showStatus("Načítavam dáta zo súboru: " + dataUrl);
+                fetch(dataUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Súbor sa nenašiel (HTTP " + response.status + ")");
+                        return response.json();
+                    })
+                    .then(data => {
+                        renderGraphFromData(data);
+                    })
+                    .catch(err => {
+                        showStatus("Nepodarilo sa načítať JSON súbor. Zobrazujem predvolené dáta.", true);
+                        renderGraphFromData(fallbackData);
+                    });
+            } else {
+                // Bez parametrov: načítaj predvolené
+                renderGraphFromData(fallbackData);
+            }
+        }
+
+        // Inicializácia vis.js plátna s povoleným voľným hýbaním a fyzikou
+        function initNetwork() {
+            const container = document.getElementById('network-graph');
+            const data = { nodes: [], edges: [] };
+            const options = {
+                interaction: {
+                    dragNodes: true,   // Hýbanie uzlami povolené
+                    dragView: true,    // Posun celej plochy povolený
+                    zoomView: true,    // Zoomovanie kolieskom povolené
+                    hover: true
+                },
+                edges: {
+                    arrows: { to: { enabled: true, scaleFactor: 0.85 } },
+                    color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#64748b' },
+                    smooth: { type: 'continuous' },
+                    width: 1.5
+                },
+                physics: {
+                    stabilization: { iterations: 120 },
+                    barnesHut: {
+                        gravitationalConstant: -3800,
+                        springLength: 130,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    }
+                }
+            };
+            network = new vis.Network(container, data, options);
+        }
+
+        // Spracovanie JSON štruktúry a vykreslenie do grafu
+        function renderGraphFromData(dataObj) {
+            if (!dataObj || !dataObj.people) return;
+
+            const people = dataObj.people;
+            const namesList = [];
+            const interestsSet = new Set();
+            const edges = [];
+
+            // 1. Zber mien a unikátnych záujmov
+            people.forEach(p => {
+                const name = (p.name || '').trim();
+                if (name !== '') {
+                    if (!namesList.includes(name)) namesList.push(name);
+
+                    if (Array.isArray(p.interests)) {
+                        p.interests.forEach(interest => {
+                            const trimmed = (interest || '').trim();
+                            if (trimmed !== '') {
+                                interestsSet.add(trimmed);
+                                edges.push({ from: name, to: trimmed });
+                            }
+                        });
+                    }
+                }
+            });
+
+            // 2. Výpočet jednotného priemeru pre modré kruhy podľa najdlhšieho mena
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.font = 'bold 15px Arial';
+
+            let maxTextWidth = 30;
+            namesList.forEach(name => {
+                const w = tempCtx.measureText(name).width;
+                if (w > maxTextWidth) maxTextWidth = w;
+            });
+
+            const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
+            const nodes = [];
+
+            // 3. Modré kruhové uzly pre osoby s centrovaným textom
+            namesList.forEach(name => {
+                nodes.push({
+                    id: name,
+                    label: name,
+                    shape: 'custom',
+                    ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
+                        const r = uniformRadius;
+                        return {
+                            drawNode() {
+                                ctx.beginPath();
+                                ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+                                ctx.fillStyle = selected ? '#0056b3' : (hover ? '#0069d9' : '#007bff');
+                                ctx.fill();
+                                ctx.lineWidth = 2.5;
+                                ctx.strokeStyle = selected ? '#003875' : '#0056b3';
+                                ctx.stroke();
+
+                                ctx.font = 'bold 15px Arial';
+                                ctx.fillStyle = '#ffffff';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(name, x, y);
+                            },
+                            nodeDimensions: { width: 2 * r, height: 2 * r }
+                        };
+                    }
+                });
+            });
+
+            // 4. Zelené obdĺžnikové uzly pre záujmy
+            interestsSet.forEach(interest => {
+                nodes.push({
+                    id: interest,
+                    label: interest,
+                    shape: 'box',
+                    borderRadius: 8,
+                    color: {
+                        background: '#28a745',
+                        border: '#1e7e34',
+                        highlight: { background: '#218838', border: '#145523' }
+                    },
+                    margin: 10,
+                    font: { color: '#ffffff', size: 14, bold: true }
+                });
+            });
+
+            // Aktualizácia plátna
+            network.setData({
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            });
+        }
+    </script>
+</body>
+</html>

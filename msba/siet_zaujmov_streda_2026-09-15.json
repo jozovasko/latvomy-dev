@@ -1,0 +1,69 @@
+{
+  "version": 2,
+  "interestCount": 2,
+  "availableInterests": [
+    "Coding",
+    "Gaming",
+    "Cooking",
+    "Music",
+    "3d tlac"
+  ],
+  "people": [
+    {
+      "name": "Matias",
+      "interests": [
+        "Coding",
+        "Gaming"
+      ]
+    },
+    {
+      "name": "Oliver",
+      "interests": [
+        "Gaming",
+        "Cooking"
+      ]
+    },
+    {
+      "name": "Elias",
+      "interests": [
+        "Coding",
+        "Music"
+      ]
+    },
+    {
+      "name": "David",
+      "interests": [
+        "3d tlac",
+        ""
+      ]
+    },
+    {
+      "name": "Kristof",
+      "interests": [
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Christian",
+      "interests": [
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Adam",
+      "interests": [
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Filip",
+      "interests": [
+        "",
+        ""
+      ]
+    }
+  ]
+}

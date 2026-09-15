@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "interestCount": 4,
+  "availableInterests": [
+    "Coding",
+    "Gaming",
+    "Cooking",
+    "Music",
+    "3d tlac",
+    "3D tlac",
+    "citanie",
+    "rozoberanie",
+    "programovanie",
+    "videohry",
+    "komixy",
+    "kreslenie",
+    "plachtenie",
+    "skauting",
+    "aikido",
+    "klavir",
+    "sporty",
+    "skola",
+    "lezenie",
+    "chyty",
+    "fusion",
+    "gitara",
+    "technologie",
+    "serm"
+  ],
+  "people": [
+    {
+      "name": "Aleš",
+      "interests": [
+        "3D tlac",
+        "citanie",
+        "rozoberanie",
+        ""
+      ]
+    },
+    {
+      "name": "Viktor",
+      "interests": [
+        "programovanie",
+        "videohry",
+        "komixy",
+        "kreslenie"
+      ]
+    },
+    {
+      "name": "Jachym",
+      "interests": [
+        "plachtenie",
+        "skauting",
+        "programovanie",
+        "aikido"
+      ]
+    },
+    {
+      "name": "Hugo",
+      "interests": [
+        "programovanie",
+        "klavir",
+        "sporty",
+        "skola"
+      ]
+    },
+    {
+      "name": "Matus",
+      "interests": [
+        "lezenie",
+        "rozoberanie",
+        "chyty",
+        ""
+      ]
+    },
+    {
+      "name": "Mati",
+      "interests": [
+        "programovanie",
+        "fusion",
+        "gitara",
+        "technologie"
+      ]
+    },
+    {
+      "name": "Nathaniel",
+      "interests": [
+        "citanie",
+        "technologie",
+        "3D tlac",
+        ""
+      ]
+    },
+    {
+      "name": "Emanuel",
+      "interests": [
+        "gitara",
+        "skauting",
+        "citanie",
+        "serm"
+      ]
+    }
+  ]
+}
