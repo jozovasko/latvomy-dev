@@ -79,7 +79,7 @@
 
     <div class="info-bar">
         <h2>Interaktívna sieť záujmov</h2>
-        <p>Preťahuj uzly a usporiadaj si sieť podľa seba (presunuté uzly zostanú zafixované)</p>
+        <p>Preťahuj uzly ľubovoľne veľakrát – položený uzol zostane stáť bez kmitania pružiny</p>
     </div>
 
     <div id="status-msg"></div>
@@ -104,7 +104,6 @@
             loadGraphFromUrl();
         };
 
-        // Zobrazenie dočasnej správy
         function showStatus(msg, isError = false) {
             const el = document.getElementById('status-msg');
             el.innerText = msg;
@@ -113,10 +112,8 @@
             setTimeout(() => { el.style.display = 'none'; }, 4000);
         }
 
-        // Parsovanie URL parametra a načítanie JSON dát
         function loadGraphFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-
             const dataUrl = urlParams.get('data');
             const rawJson = urlParams.get('json');
 
@@ -147,7 +144,6 @@
             }
         }
 
-        // Inicializácia vis.js plátna s vylepšenou fyzikou proti prekrývaniu
         function initNetwork() {
             const container = document.getElementById('network-graph');
             nodesDataSet = new vis.DataSet([]);
@@ -175,31 +171,42 @@
                         updateInterval: 25
                     },
                     barnesHut: {
-                        gravitationalConstant: -7500, // Silnejšie odpudzovanie uzlov
+                        gravitationalConstant: -7500,
                         centralGravity: 0.25,
-                        springLength: 180,           // Väčší odstup, aby sa kruhy netlačili
+                        springLength: 180,
                         springConstant: 0.03,
                         damping: 0.12,
-                        avoidOverlap: 1.0            // Maximálna penalizácia za vzájomné prekrývanie
+                        avoidOverlap: 1.0
                     }
                 }
             };
 
             network = new vis.Network(container, data, options);
 
-            // Vypnutie automatickej pružiny po presunutí uzla používateľom
-            network.on("dragEnd", function(params) {
+            // Počas začiatku ťahania uzla: uvoľníme ho z fixácie, aby sa dal posúvať
+            network.on("dragStart", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
                         id: nodeId,
-                        fixed: { x: true, y: true } // Zafixuje uzol natrvalo na novej pozícii
+                        fixed: { x: false, y: false }
                     }));
                     nodesDataSet.update(updates);
                 }
             });
+
+            // Po pustení: zafixujeme ho na mieste a okamžite zastavíme simulačný motor, aby sa pružiny vypli
+            network.on("dragEnd", function(params) {
+                if (params.nodes && params.nodes.length > 0) {
+                    const updates = params.nodes.map(nodeId => ({
+                        id: nodeId,
+                        fixed: { x: true, y: true }
+                    }));
+                    nodesDataSet.update(updates);
+                    network.stopSimulation();
+                }
+            });
         }
 
-        // Spracovanie JSON štruktúry a vykreslenie do grafu
         function renderGraphFromData(dataObj) {
             if (!dataObj || !dataObj.people) return;
 
@@ -208,7 +215,6 @@
             const interestsSet = new Set();
             const edges = [];
 
-            // 1. Zber mien a unikátnych záujmov
             people.forEach(p => {
                 const name = (p.name || '').trim();
                 if (name !== '') {
@@ -226,7 +232,6 @@
                 }
             });
 
-            // 2. Výpočet jednotného priemeru pre modré kruhy podľa najdlhšieho mena
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.font = 'bold 15px Arial';
@@ -240,13 +245,12 @@
             const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
             const nodes = [];
 
-            // 3. Modré kruhové uzly pre študentov
+            // Modré kruhové uzly pre študentov
             namesList.forEach(name => {
                 nodes.push({
                     id: name,
                     label: name,
                     shape: 'custom',
-                    // Definícia rozmeru pre výpočet kolízií v simulačnom jadre
                     size: uniformRadius,
                     ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
                         const r = uniformRadius;
@@ -272,7 +276,7 @@
                 });
             });
 
-            // 4. Zelené obdĺžnikové uzly pre záujmy
+            // Zelené obdĺžnikové uzly pre záujmy
             interestsSet.forEach(interest => {
                 nodes.push({
                     id: interest,
@@ -289,7 +293,6 @@
                 });
             });
 
-            // Naplnenie DataSetov (umožňuje dynamické aktualizácie fixed stavov)
             nodesDataSet.clear();
             edgesDataSet.clear();
             nodesDataSet.add(nodes);
