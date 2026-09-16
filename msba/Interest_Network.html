@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Name-Interest Graph</title>
+    <title>Interactive Name-Interest Graph (Editor)</title>
 
     <!-- Vis.js Library for Graph Visualization -->
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -85,7 +85,7 @@
         table {
             border-collapse: collapse;
             table-layout: fixed;
-            width: auto; /* Žiadne umelé rozťahovanie na 100%, šírku riadia presné pixely */
+            width: auto;
         }
 
         th, td {
@@ -103,7 +103,6 @@
             font-weight: bold;
         }
 
-        /* Lišta na zmenu šírky stĺpca */
         .col-resizer {
             position: absolute;
             top: 0;
@@ -132,19 +131,23 @@
         /* Graph Output Container */
         #network-graph {
             width: 100%;
-            height: 560px;
+            height: 580px;
             border: 2px solid #ddd;
             background-color: white;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            cursor: grab;
+        }
+
+        #network-graph:active {
+            cursor: grabbing;
         }
     </style>
 </head>
 <body>
 
-    <h2>Interactive Interest Network</h2>
+    <h2>Interactive Interest Network (Editor)</h2>
 
-    <!-- Centrálny dynamický zoznam záujmov -->
     <datalist id="interestsList"></datalist>
 
     <div class="container">
@@ -178,11 +181,13 @@
     <script>
         let interestCount = 2;
         let network = null;
+        let nodesDataSet = null;
+        let edgesDataSet = null;
 
-        // Globálny register uložených záujmov
+        // Register záujmov a mapa uložených pozícií uzlov { id: { x, y } }
         let registeredInterests = new Set(["Coding", "Gaming", "Cooking", "Music"]);
+        let savedPositionsMap = {};
 
-        // Predvolené dáta
         const initialData = [
             { name: "Adam", interests: ["Coding", "Gaming"] },
             { name: "David", interests: ["Gaming", "Cooking"] },
@@ -231,7 +236,6 @@
             updateGraph();
         }
 
-        // Opravené plynulé rozťahovanie stĺpcov bez odskakovania
         function makeResizable(th) {
             const resizer = document.createElement('div');
             resizer.className = 'col-resizer';
@@ -246,7 +250,6 @@
                 const startWidth = th.getBoundingClientRect().width;
                 const startTableWidth = table.getBoundingClientRect().width;
 
-                // 1. Zafixovanie reálnych pixelových šírok všetkých stĺpcov pred štartom posunu
                 const allThs = table.querySelectorAll('th');
                 allThs.forEach(cell => {
                     cell.style.width = cell.getBoundingClientRect().width + 'px';
@@ -262,7 +265,6 @@
                     const newWidth = Math.max(65, startWidth + diff);
                     const actualDiff = newWidth - startWidth;
 
-                    // Posun presne pod kurzorom bez ovplyvnenia susedných stĺpcov
                     th.style.width = newWidth + 'px';
                     table.style.width = (startTableWidth + actualDiff) + 'px';
                 }
@@ -290,14 +292,12 @@
             const headerRow = document.getElementById('headerRow');
             headerRow.innerHTML = '';
 
-            // 1. Hlavička: Meno
             const thName = document.createElement('th');
             thName.innerText = 'Meno';
             thName.style.width = '180px';
             makeResizable(thName);
             headerRow.appendChild(thName);
 
-            // 2. Hlavičky: Záujmy
             for (let i = 1; i <= interestCount; i++) {
                 const th = document.createElement('th');
                 th.innerText = `Záujem ${i}`;
@@ -306,16 +306,13 @@
                 headerRow.appendChild(th);
             }
 
-            // 3. Hlavička: Akcie
             const thAction = document.createElement('th');
             thAction.innerText = 'Akcie';
             thAction.style.width = '100px';
             headerRow.appendChild(thAction);
 
-            // Nastavenie celkovej šírky tabuľky na súčet stĺpcov
             table.style.width = (180 + (interestCount * 200) + 100) + 'px';
 
-            // Riadky tabuľky
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
@@ -378,7 +375,6 @@
             makeResizable(newTh);
             headerRow.insertBefore(newTh, headerRow.lastElementChild);
 
-            // Prispôsobenie celkovej šírky tabuľky o nový stĺpec (+200px)
             const currentTableWidth = table.getBoundingClientRect().width;
             table.style.width = (currentTableWidth + 200) + 'px';
 
@@ -401,6 +397,7 @@
             updateGraph();
         }
 
+        // Zber dát vrátane presných súradníc rozložených uzlov
         function serializeTableData() {
             const tbody = document.getElementById('tableBody');
             const rowsData = [];
@@ -423,19 +420,37 @@
                 }
             }
 
+            // Uloženie aktuálnych pozícií uzlov z vis.js
+            let currentPositions = {};
+            if (network) {
+                const rawPos = network.getPositions();
+                for (let id in rawPos) {
+                    currentPositions[id] = {
+                        x: Math.round(rawPos[id].x),
+                        y: Math.round(rawPos[id].y)
+                    };
+                }
+            }
+
             return {
-                version: 2,
+                version: 3,
                 interestCount: interestCount,
                 availableInterests: Array.from(registeredInterests),
+                positions: currentPositions,
                 people: rowsData
             };
         }
 
         function restoreData(dataObj) {
             if (!dataObj || !dataObj.people) return;
+
             if (dataObj.availableInterests && Array.isArray(dataObj.availableInterests)) {
                 registeredInterests = new Set(dataObj.availableInterests);
             }
+
+            // Načítanie súradníc ak v JSON existujú
+            savedPositionsMap = (dataObj.positions && typeof dataObj.positions === 'object') ? dataObj.positions : {};
+
             renderFromDataArray(dataObj.people, dataObj.interestCount || 2);
             if (network) updateGraph();
         }
@@ -480,23 +495,65 @@
 
         function initNetwork() {
             const container = document.getElementById('network-graph');
-            const data = { nodes: [], edges: [] };
+            nodesDataSet = new vis.DataSet([]);
+            edgesDataSet = new vis.DataSet([]);
+
+            const data = { nodes: nodesDataSet, edges: edgesDataSet };
             const options = {
+                interaction: {
+                    dragNodes: true,
+                    dragView: true,
+                    zoomView: true,
+                    hover: true
+                },
                 edges: {
-                    arrows: { to: { enabled: true, scaleFactor: 0.8 } },
-                    color: { color: '#848484' },
-                    smooth: { type: 'continuous' }
+                    arrows: { to: { enabled: true, scaleFactor: 0.85 } },
+                    color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#64748b' },
+                    smooth: { type: 'continuous' },
+                    width: 1.5
                 },
                 physics: {
-                    stabilization: false,
+                    solver: 'barnesHut',
+                    stabilization: {
+                        enabled: true,
+                        iterations: 150,
+                        updateInterval: 25
+                    },
                     barnesHut: {
-                        gravitationalConstant: -3500,
-                        springLength: 120,
-                        springConstant: 0.04
+                        gravitationalConstant: -7500, // Silné odpudzovanie proti prekrývaniu
+                        centralGravity: 0.25,
+                        springLength: 180,
+                        springConstant: 0.03,
+                        damping: 0.12,
+                        avoidOverlap: 1.0            // Zákaz kolízií
                     }
                 }
             };
+
             network = new vis.Network(container, data, options);
+
+            // Počas ťahania uvoľníme uzol pre voľný pohyb
+            network.on("dragStart", function(params) {
+                if (params.nodes && params.nodes.length > 0) {
+                    const updates = params.nodes.map(nodeId => ({
+                        id: nodeId,
+                        fixed: { x: false, y: false }
+                    }));
+                    nodesDataSet.update(updates);
+                }
+            });
+
+            // Po pustení zafixujeme uzol na mieste a vypneme kmitanie pružiny
+            network.on("dragEnd", function(params) {
+                if (params.nodes && params.nodes.length > 0) {
+                    const updates = params.nodes.map(nodeId => ({
+                        id: nodeId,
+                        fixed: { x: true, y: true }
+                    }));
+                    nodesDataSet.update(updates);
+                    network.stopSimulation();
+                }
+            });
         }
 
         function updateGraph() {
@@ -530,7 +587,6 @@
                 }
             }
 
-            // Výpočet jednotnej veľkosti kruhu podľa najdlhšieho mena
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.font = 'bold 15px Arial';
@@ -544,12 +600,13 @@
             const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
             const nodes = [];
 
-            // Uzly osôb (rovnaká veľkosť, centrovaný text)
+            // Uzly osôb (zohľadňujú načítané súradnice a zafixovanie)
             namesList.forEach(name => {
-                nodes.push({
+                const nodeDef = {
                     id: name,
                     label: name,
                     shape: 'custom',
+                    size: uniformRadius,
                     ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
                         const r = uniformRadius;
                         return {
@@ -571,12 +628,20 @@
                             nodeDimensions: { width: 2 * r, height: 2 * r }
                         };
                     }
-                });
+                };
+
+                if (savedPositionsMap[name]) {
+                    nodeDef.x = savedPositionsMap[name].x;
+                    nodeDef.y = savedPositionsMap[name].y;
+                    nodeDef.fixed = { x: true, y: true };
+                }
+
+                nodes.push(nodeDef);
             });
 
             // Uzly záujmov
             interestsMap.forEach((_, interest) => {
-                nodes.push({
+                const nodeDef = {
                     id: interest,
                     label: interest,
                     shape: 'box',
@@ -588,13 +653,26 @@
                     },
                     margin: 10,
                     font: { color: '#ffffff', size: 14, bold: true }
-                });
+                };
+
+                if (savedPositionsMap[interest]) {
+                    nodeDef.x = savedPositionsMap[interest].x;
+                    nodeDef.y = savedPositionsMap[interest].y;
+                    nodeDef.fixed = { x: true, y: true };
+                }
+
+                nodes.push(nodeDef);
             });
 
-            network.setData({
-                nodes: new vis.DataSet(nodes),
-                edges: new vis.DataSet(edges)
-            });
+            nodesDataSet.clear();
+            edgesDataSet.clear();
+            nodesDataSet.add(nodes);
+            edgesDataSet.add(edges);
+
+            // Ak boli načítané uložené pozície, netreba celú sieť znova rozkmitávať
+            if (Object.keys(savedPositionsMap).length > 0) {
+                network.stopSimulation();
+            }
         }
     </script>
 </body>
