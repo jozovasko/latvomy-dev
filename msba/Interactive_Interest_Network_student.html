@@ -79,7 +79,7 @@
 
     <div class="info-bar">
         <h2>Interaktívna sieť záujmov</h2>
-        <p>Preťahuj uzly a skúmaj vzájomné prepojenia</p>
+        <p>Preťahuj uzly a usporiadaj si sieť podľa seba (presunuté uzly zostanú zafixované)</p>
     </div>
 
     <div id="status-msg"></div>
@@ -87,6 +87,8 @@
 
     <script>
         let network = null;
+        let nodesDataSet = null;
+        let edgesDataSet = null;
 
         // Vzorové počiatočné dáta (fallback, ak v URL nie je parameter)
         const fallbackData = {
@@ -115,9 +117,7 @@
         function loadGraphFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
 
-            // 1. Spôsob: parameter ?data=cesta_k_suboru.json
             const dataUrl = urlParams.get('data');
-            // 2. Spôsob: parameter ?json={"people":[...]}
             const rawJson = urlParams.get('json');
 
             if (rawJson) {
@@ -143,20 +143,22 @@
                         renderGraphFromData(fallbackData);
                     });
             } else {
-                // Bez parametrov: načítaj predvolené
                 renderGraphFromData(fallbackData);
             }
         }
 
-        // Inicializácia vis.js plátna s povoleným voľným hýbaním a fyzikou
+        // Inicializácia vis.js plátna s vylepšenou fyzikou proti prekrývaniu
         function initNetwork() {
             const container = document.getElementById('network-graph');
-            const data = { nodes: [], edges: [] };
+            nodesDataSet = new vis.DataSet([]);
+            edgesDataSet = new vis.DataSet([]);
+
+            const data = { nodes: nodesDataSet, edges: edgesDataSet };
             const options = {
                 interaction: {
-                    dragNodes: true,   // Hýbanie uzlami povolené
-                    dragView: true,    // Posun celej plochy povolený
-                    zoomView: true,    // Zoomovanie kolieskom povolené
+                    dragNodes: true,
+                    dragView: true,
+                    zoomView: true,
                     hover: true
                 },
                 edges: {
@@ -166,16 +168,35 @@
                     width: 1.5
                 },
                 physics: {
-                    stabilization: { iterations: 120 },
+                    solver: 'barnesHut',
+                    stabilization: {
+                        enabled: true,
+                        iterations: 200,
+                        updateInterval: 25
+                    },
                     barnesHut: {
-                        gravitationalConstant: -3800,
-                        springLength: 130,
-                        springConstant: 0.04,
-                        damping: 0.09
+                        gravitationalConstant: -7500, // Silnejšie odpudzovanie uzlov
+                        centralGravity: 0.25,
+                        springLength: 180,           // Väčší odstup, aby sa kruhy netlačili
+                        springConstant: 0.03,
+                        damping: 0.12,
+                        avoidOverlap: 1.0            // Maximálna penalizácia za vzájomné prekrývanie
                     }
                 }
             };
+
             network = new vis.Network(container, data, options);
+
+            // Vypnutie automatickej pružiny po presunutí uzla používateľom
+            network.on("dragEnd", function(params) {
+                if (params.nodes && params.nodes.length > 0) {
+                    const updates = params.nodes.map(nodeId => ({
+                        id: nodeId,
+                        fixed: { x: true, y: true } // Zafixuje uzol natrvalo na novej pozícii
+                    }));
+                    nodesDataSet.update(updates);
+                }
+            });
         }
 
         // Spracovanie JSON štruktúry a vykreslenie do grafu
@@ -219,12 +240,14 @@
             const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
             const nodes = [];
 
-            // 3. Modré kruhové uzly pre osoby s centrovaným textom
+            // 3. Modré kruhové uzly pre študentov
             namesList.forEach(name => {
                 nodes.push({
                     id: name,
                     label: name,
                     shape: 'custom',
+                    // Definícia rozmeru pre výpočet kolízií v simulačnom jadre
+                    size: uniformRadius,
                     ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
                         const r = uniformRadius;
                         return {
@@ -266,11 +289,11 @@
                 });
             });
 
-            // Aktualizácia plátna
-            network.setData({
-                nodes: new vis.DataSet(nodes),
-                edges: new vis.DataSet(edges)
-            });
+            // Naplnenie DataSetov (umožňuje dynamické aktualizácie fixed stavov)
+            nodesDataSet.clear();
+            edgesDataSet.clear();
+            nodesDataSet.add(nodes);
+            edgesDataSet.add(edges);
         }
     </script>
 </body>
