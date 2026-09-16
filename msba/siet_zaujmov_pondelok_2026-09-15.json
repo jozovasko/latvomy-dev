@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "interestCount": 4,
+  "interestCount": 5,
   "availableInterests": [
     "Coding",
     "Gaming",
@@ -25,7 +25,8 @@
     "fusion",
     "gitara",
     "technologie",
-    "serm"
+    "serm",
+    "msba"
   ],
   "people": [
     {
@@ -34,7 +35,8 @@
         "3D tlac",
         "citanie",
         "rozoberanie",
-        ""
+        "",
+        "msba"
       ]
     },
     {
@@ -43,16 +45,8 @@
         "programovanie",
         "videohry",
         "komixy",
-        "kreslenie"
-      ]
-    },
-    {
-      "name": "Jachym",
-      "interests": [
-        "plachtenie",
-        "skauting",
-        "programovanie",
-        "aikido"
+        "kreslenie",
+        "msba"
       ]
     },
     {
@@ -61,7 +55,8 @@
         "programovanie",
         "klavir",
         "sporty",
-        "skola"
+        "skola",
+        "msba"
       ]
     },
     {
@@ -70,7 +65,8 @@
         "lezenie",
         "rozoberanie",
         "chyty",
-        ""
+        "",
+        "msba"
       ]
     },
     {
@@ -79,7 +75,8 @@
         "programovanie",
         "fusion",
         "gitara",
-        "technologie"
+        "technologie",
+        "msba"
       ]
     },
     {
@@ -88,7 +85,8 @@
         "citanie",
         "technologie",
         "3D tlac",
-        ""
+        "",
+        "msba"
       ]
     },
     {
@@ -97,7 +95,8 @@
         "gitara",
         "skauting",
         "citanie",
-        "serm"
+        "serm",
+        "msba"
       ]
     }
   ]

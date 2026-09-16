@@ -6,62 +6,63 @@
     "Gaming",
     "Cooking",
     "Music",
-    "3d tlac"
+    "3d tlac",
+    "msba"
   ],
   "people": [
     {
       "name": "Matias",
       "interests": [
-        "Coding",
-        "Gaming"
+        "msba",
+        ""
       ]
     },
     {
       "name": "Oliver",
       "interests": [
-        "Gaming",
-        "Cooking"
+        "msba",
+        ""
       ]
     },
     {
       "name": "Elias",
       "interests": [
-        "Coding",
-        "Music"
+        "msba",
+        ""
       ]
     },
     {
       "name": "David",
       "interests": [
-        "3d tlac",
+        "msba",
         ""
       ]
     },
     {
       "name": "Kristof",
       "interests": [
-        "",
+        "msba",
         ""
       ]
     },
     {
       "name": "Christian",
       "interests": [
-        "",
+        "msba",
         ""
       ]
     },
     {
       "name": "Adam",
       "interests": [
-        "",
+        "msba",
         ""
       ]
     },
     {
       "name": "Filip",
       "interests": [
-        "",
+        "msba",
         ""
       ]
     }
