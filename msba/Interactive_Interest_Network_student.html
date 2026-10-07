@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktívna sieť záujmov – Študentský náhľad</title>
+    <title>Interaktívna sieť záujmov – v1.3.0</title>
 
     <!-- Vis.js Library for Graph Visualization -->
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -41,6 +41,18 @@
             font-size: 1.15rem;
             color: #0f172a;
             margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-version {
+            font-size: 0.72rem;
+            background-color: #0284c7;
+            color: #ffffff;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: bold;
         }
 
         .info-bar p {
@@ -79,14 +91,15 @@
 <body>
 
     <div class="info-bar">
-        <h2>Interaktívna sieť záujmov</h2>
-        <p>Preťahuj uzly ľubovoľne veľakrát – položený uzol zostane stáť bez kmitania pružiny</p>
+        <h2>Interaktívna sieť záujmov <span class="badge-version">v1.3.0</span></h2>
+        <p>Preťahuj uzly ľubovoľne veľakrát – položený uzol zostane stáť bez kmitania</p>
     </div>
 
     <div id="status-msg"></div>
     <div id="network-graph"></div>
 
     <script>
+        const APP_VERSION = "v1.3.0";
         let network = null;
         let nodesDataSet = null;
         let edgesDataSet = null;
@@ -94,16 +107,16 @@
         // Vzorové počiatočné dáta (fallback)
         const fallbackData = {
             people: [
-                { name: "Adam", interests: ["Tyni", "Bleder", "Khan Academy", "parkour", "poc. hry", "3dliga"] },
-                { name: "Christian", interests: ["el. obvody", "volejbal", "lego", "spajkovanie", "poc. hry", "programovanie"] },
-                { name: "David", interests: ["poc. hry", "3dliga"] },
-                { name: "Eduard", interests: ["strelba", "plavanie", "lego", "spajkovanie"] },
-                { name: "Elias", interests: ["poc. hry", "3dliga", "3D modelovanie", "robotika", "floorball", "spajkovanie"] },
-                { name: "Filip", interests: ["programovanie", "robotika", "python", "spajkovanie"] },
-                { name: "Kristof", interests: ["3D modelovanie", "robotika", "floorball", "python"] },
+                { name: "Adam", interests: ["3dliga", "sport", "poc. hry", "Tyni", "Khan Academy"] },
+                { name: "Christian", interests: ["volejbal", "poc. hry", "el. obvody", "programovanie"] },
+                { name: "David", interests: ["3dliga"] },
+                { name: "Eduard", interests: ["spajkovanie", "plavanie", "strelba", "lego"] },
+                { name: "Elias", interests: ["3dliga", "poc. hry", "floorball", "lego", "3D modelovanie", "spajkovanie", "robotika"] },
+                { name: "Filip", interests: ["programovanie", "python", "robotika", "lego"] },
+                { name: "Kristof", interests: ["3dliga", "floorball", "python", "robotika"] },
                 { name: "Oliver", interests: ["fotenie", "sport"] },
-                { name: "Ondrej", interests: ["AI", "Khan Academy", "sport", "poc. hry", "3D modelovanie"] },
-                { name: "Riso", interests: ["serm", "poc. hry"] }
+                { name: "Ondrej", interests: ["poc. hry", "parkour", "3D modelovanie", "Bleder", "AI", "Khan Academy"] },
+                { name: "Riso", interests: ["serm", "poc. hry", "lego"] }
             ]
         };
 
@@ -114,7 +127,7 @@
 
         function showStatus(msg, isError = false) {
             const el = document.getElementById('status-msg');
-            el.innerText = msg;
+            el.innerText = `[${APP_VERSION}] ` + msg;
             el.style.backgroundColor = isError ? 'rgba(220, 38, 38, 0.95)' : 'rgba(15, 23, 42, 0.92)';
             el.style.display = 'block';
             setTimeout(() => { el.style.display = 'none'; }, 4000);
@@ -139,27 +152,27 @@
                     const parsed = JSON.parse(rawJson);
                     renderGraphFromData(extractPeopleList(parsed));
                 } catch (e) {
-                    showStatus("Chyba v JSON parametri: " + e.message, true);
+                    showStatus("Chyba JSON: " + e.message, true);
                     renderGraphFromData(extractPeopleList(fallbackData));
                 }
             } else if (dataUrl) {
-                showStatus("Načítavam: " + dataUrl);
+                showStatus("Načítavam súbor: " + dataUrl);
                 fetch(dataUrl, { cache: 'no-cache' })
                     .then(response => {
-                        if (!response.ok) throw new Error("HTTP " + response.status + " - súbor sa nenašiel");
+                        if (!response.ok) throw new Error("HTTP " + response.status + " súbor nenájdený");
                         return response.json();
                     })
                     .then(data => {
                         const people = extractPeopleList(data);
                         if (people.length === 0) {
-                            showStatus("Súbor bol načítaný, ale neobsahuje zoznam ľudí. Používam fallback.", true);
+                            showStatus("Súbor načítaný, ale pole ľudí je prázdne. Používam fallback.", true);
                             renderGraphFromData(extractPeopleList(fallbackData));
                         } else {
                             renderGraphFromData(people);
                         }
                     })
                     .catch(err => {
-                        showStatus("Chyba: " + err.message + ". Zobrazujem fallback.", true);
+                        showStatus("Chyba čítania: " + err.message + ". Zobrazujem fallback.", true);
                         renderGraphFromData(extractPeopleList(fallbackData));
                     });
             } else {
@@ -188,7 +201,7 @@
                         type: 'continuous',
                         roundness: 0.15
                     },
-                    width: 1.6
+                    width: 1.5
                 },
                 physics: {
                     enabled: false
@@ -197,7 +210,7 @@
 
             network = new vis.Network(container, data, options);
 
-            // Pri ťahaní uzla dočasne odopneme fixáciu
+            // Počas ťahania uzol uvoľníme
             network.on("dragStart", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -208,7 +221,7 @@
                 }
             });
 
-            // Po pustení uzol natrvalo zafixujeme na novom mieste (bez kmitania)
+            // Po pustení uzol zafixujeme na novom mieste (žiadne kmitanie)
             network.on("dragEnd", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -227,41 +240,41 @@
             const interestConnections = {};
             const edges = [];
 
-            // 1. Zber uzlov a relácií
+            // 1. Zber platných študentov a ich neprázdnych záujmov
             peopleList.forEach(p => {
                 const name = (p.name || '').trim();
                 if (name !== '') {
                     if (!namesList.includes(name)) namesList.push(name);
 
                     const interests = Array.isArray(p.interests) ? p.interests : (Array.isArray(p.zaujmy) ? p.zaujmy : []);
-                    interests.forEach(interest => {
-                        const trimmed = (interest || '').trim();
-                        if (trimmed !== '') {
-                            if (!interestConnections[trimmed]) {
-                                interestConnections[trimmed] = [];
+                    interests.forEach(rawInt => {
+                        const interest = (rawInt || '').trim();
+                        if (interest !== '') {
+                            if (!interestConnections[interest]) {
+                                interestConnections[interest] = [];
                             }
-                            if (!interestConnections[trimmed].includes(name)) {
-                                interestConnections[trimmed].push(name);
+                            if (!interestConnections[interest].includes(name)) {
+                                interestConnections[interest].push(name);
                             }
                             edges.push({
-                                id: `e_${name}_${trimmed}`,
+                                id: `e_${name}_${interest}`,
                                 from: name,
-                                to: trimmed
+                                to: interest
                             });
                         }
                     });
                 }
             });
 
-            // 2. Abecedné zoradenie mien študentov (slovenské pravidlá radenia)
+            // 2. Zoradenie mien študentov v abecednom poradí
             namesList.sort((a, b) => a.localeCompare(b, 'sk'));
 
             const N = namesList.length;
-            const R_MAIN = Math.max(340, N * 42); // Polomer hlavného kruhu
+            const R_MAIN = Math.max(380, N * 44); // Polomer kruhu podľa počtu študentov
             const studentPositions = {};
             const studentAngles = {};
 
-            // 3. Rozmiestnenie modrých uzlov v smere hodinových ručičiek od 12:00 (-PI / 2)
+            // 3. Rozmiestnenie modrých uzlov v smere hodinových ručičiek od 12:00
             namesList.forEach((name, index) => {
                 const angle = -Math.PI / 2 + (2 * Math.PI * index) / N;
                 studentAngles[name] = angle;
@@ -271,7 +284,7 @@
                 };
             });
 
-            // 4. Rozdelenie štítkov: vonkajšie (len pre 1 študenta) vs vnútorné (pre 2 a viac)
+            // 4. Rozdelenie záujmov na vonkajšie (1 študent) a vnútorné (2+ študenti)
             const outerByStudent = {};
             const sharedInterests = [];
 
@@ -280,14 +293,14 @@
                     const st = students[0];
                     if (!outerByStudent[st]) outerByStudent[st] = [];
                     outerByStudent[st].push(interest);
-                } else {
+                } else if (students.length > 1) {
                     sharedInterests.push({ interest, students });
                 }
             });
 
             const interestPositions = {};
 
-            // 4a. Vonkajšie štítky – radiálne mimo kruhu vo vejári
+            // 4a. Vonkajšie zelené štítky: radiálne mimo kruhu vo vejári
             Object.entries(outerByStudent).forEach(([stName, items]) => {
                 const baseAngle = studentAngles[stName];
                 const count = items.length;
@@ -296,9 +309,9 @@
                 items.forEach((item, idx) => {
                     let angle = baseAngle;
                     if (count > 1) {
-                        const step = Math.min(0.28, (2 * Math.PI) / (N * 1.6 * count));
-                        const offset = (idx - (count - 1) / 2) * step;
-                        angle = baseAngle + offset;
+                        const maxSpread = 0.45;
+                        const step = maxSpread / Math.max(1, count - 1);
+                        angle = baseAngle - (maxSpread / 2) + (idx * step);
                     }
                     interestPositions[item] = {
                         x: (R_MAIN + distOuter) * Math.cos(angle),
@@ -307,7 +320,7 @@
                 });
             });
 
-            // 4b. Vnútorné štítky – v ťažisku zúčastnených študentov s rozptylom proti kolíziám
+            // 4b. Vnútorné zelené štítky: ťažisko študentov vnútri kruhu s odpudzovaním
             const innerNodes = [];
             sharedInterests.forEach(({ interest, students }, idx) => {
                 let sumX = 0;
@@ -321,31 +334,31 @@
                 let avgX = sumX / students.length;
                 let avgY = sumY / students.length;
 
-                // Odstredivý posun pri prekrývaní v geometrickom strede (zlatý uhol)
-                const phi = idx * 2.39996; // ~137.5 stupňa
-                const spiralR = 30 + Math.sqrt(idx) * 22;
-                let posX = avgX * 0.45 + Math.cos(phi) * spiralR;
-                let posY = avgY * 0.45 + Math.sin(phi) * spiralR;
+                // Jemný odstup pri zhodných ťažiskách
+                const phi = idx * 2.39996; // zlatý uhol
+                const jitterR = 25 + Math.sqrt(idx) * 20;
+                let posX = avgX * 0.42 + Math.cos(phi) * jitterR;
+                let posY = avgY * 0.42 + Math.sin(phi) * jitterR;
 
-                // Neprekročiť 70% polomeru hlavného kruhu
-                const distCenter = Math.hypot(posX, posY);
-                const maxInnerR = R_MAIN * 0.68;
-                if (distCenter > maxInnerR) {
-                    posX = (posX / distCenter) * maxInnerR;
-                    posY = (posY / distCenter) * maxInnerR;
+                // Neprekročiť 70% hlavného polomeru
+                const currentDist = Math.hypot(posX, posY);
+                const maxInnerR = R_MAIN * 0.70;
+                if (currentDist > maxInnerR) {
+                    posX = (posX / currentDist) * maxInnerR;
+                    posY = (posY / currentDist) * maxInnerR;
                 }
 
                 innerNodes.push({ id: interest, x: posX, y: posY });
             });
 
-            // Iteratívna relaxácia vnútorných štítkov proti vzájomnému prekrytiu
-            for (let iter = 0; iter < 45; iter++) {
+            // Relaxácia proti prekrývaniu štítkov v strede
+            for (let iter = 0; iter < 50; iter++) {
                 for (let i = 0; i < innerNodes.length; i++) {
                     for (let j = i + 1; j < innerNodes.length; j++) {
                         const dx = innerNodes[j].x - innerNodes[i].x;
                         const dy = innerNodes[j].y - innerNodes[i].y;
                         const d = Math.hypot(dx, dy) || 1;
-                        const minD = 90;
+                        const minD = 95;
                         if (d < minD) {
                             const shift = (minD - d) / 2;
                             const sx = (dx / d) * shift;
@@ -433,23 +446,24 @@
                 });
             });
 
-            // 6. Odovzdanie do Vis.js a vycentrovanie kamery
+            // 6. Odovzdanie do Vis.js dát a fit pohľadu
             nodesDataSet.clear();
             edgesDataSet.clear();
             nodesDataSet.add(nodes);
             edgesDataSet.add(edges);
 
-            // Centrujeme po vykreslení, aby neostala prázdna plocha
+            // Redraw a centrovanie pohľadu po inicializácii plátna
             setTimeout(() => {
                 if (network) {
+                    network.redraw();
                     network.fit({
                         animation: {
-                            duration: 400,
+                            duration: 350,
                             easingFunction: 'easeInOutQuad'
                         }
                     });
                 }
-            }, 60);
+            }, 80);
         }
     </script>
 </body>
