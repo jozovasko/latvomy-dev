@@ -90,12 +90,19 @@
         let nodesDataSet = null;
         let edgesDataSet = null;
 
-        // Vzorové počiatočné dáta (fallback, ak v URL nie je parameter)
+        // Vzorové počiatočné dáta
         const fallbackData = {
             people: [
-                { name: "Adam", interests: ["Coding", "3D Tlač"] },
-                { name: "David", interests: ["Robotika", "3D Tlač"] },
-                { name: "Filip", interests: ["Coding", "Hudba"] }
+                { name: "Adam", interests: ["Tyni", "Bleder", "Khan Academy", "parkour", "poc. hry", "3dliga"] },
+                { name: "Christian", interests: ["el. obvody", "volejbal", "lego", "spajkovanie", "poc. hry", "programovanie"] },
+                { name: "David", interests: ["poc. hry", "3dliga", "Elias"] },
+                { name: "Eduard", interests: ["strelba", "plavanie", "lego", "spajkovanie"] },
+                { name: "Elias", interests: ["poc. hry", "3dliga", "3D modelovanie", "robotika", "floorball", "spajkovanie"] },
+                { name: "Filip", interests: ["programovanie", "robotika", "python", "spajkovanie"] },
+                { name: "Kristof", interests: ["3D modelovanie", "robotika", "floorball", "python"] },
+                { name: "Oliver", interests: ["fotenie", "sport"] },
+                { name: "Ondrej", interests: ["AI", "Khan Academy", "sport", "poc. hry", "3D modelovanie"] },
+                { name: "Riso", interests: ["serm", "poc. hry"] }
             ]
         };
 
@@ -164,26 +171,12 @@
                     width: 1.5
                 },
                 physics: {
-                    solver: 'barnesHut',
-                    stabilization: {
-                        enabled: true,
-                        iterations: 200,
-                        updateInterval: 25
-                    },
-                    barnesHut: {
-                        gravitationalConstant: -7500,
-                        centralGravity: 0.25,
-                        springLength: 180,
-                        springConstant: 0.03,
-                        damping: 0.12,
-                        avoidOverlap: 1.0
-                    }
+                    enabled: false
                 }
             };
 
             network = new vis.Network(container, data, options);
 
-            // Počas začiatku ťahania uzla: uvoľníme ho z fixácie, aby sa dal posúvať
             network.on("dragStart", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -194,7 +187,6 @@
                 }
             });
 
-            // Po pustení: zafixujeme ho na mieste a okamžite zastavíme simulačný motor, aby sa pružiny vypli
             network.on("dragEnd", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -202,7 +194,6 @@
                         fixed: { x: true, y: true }
                     }));
                     nodesDataSet.update(updates);
-                    network.stopSimulation();
                 }
             });
         }
@@ -212,9 +203,10 @@
 
             const people = dataObj.people;
             const namesList = [];
-            const interestsSet = new Set();
+            const interestConnections = {};
             const edges = [];
 
+            // 1. Zber mien a záujmov
             people.forEach(p => {
                 const name = (p.name || '').trim();
                 if (name !== '') {
@@ -224,7 +216,12 @@
                         p.interests.forEach(interest => {
                             const trimmed = (interest || '').trim();
                             if (trimmed !== '') {
-                                interestsSet.add(trimmed);
+                                if (!interestConnections[trimmed]) {
+                                    interestConnections[trimmed] = [];
+                                }
+                                if (!interestConnections[trimmed].includes(name)) {
+                                    interestConnections[trimmed].push(name);
+                                }
                                 edges.push({ from: name, to: trimmed });
                             }
                         });
@@ -232,6 +229,89 @@
                 }
             });
 
+            // 2. Abecedné zoradenie mien
+            namesList.sort((a, b) => a.localeCompare(b, 'sk'));
+
+            const N = namesList.length;
+            const R_MAIN = Math.max(380, N * 42); // Polomer hlavného kruhu
+            const studentPositions = {};
+            const studentAngles = {};
+
+            // 3. Rozmiestnenie modrých uzlov v smere hodinových ručičiek (od 12:00)
+            namesList.forEach((name, index) => {
+                const angle = -Math.PI / 2 + (2 * Math.PI * index) / N;
+                studentAngles[name] = angle;
+                studentPositions[name] = {
+                    x: R_MAIN * Math.cos(angle),
+                    y: R_MAIN * Math.sin(angle)
+                };
+            });
+
+            // 4. Rozdelenie záujmov na vonkajšie (1 študent) a vnútorné (2+ študenti)
+            const outerInterestsByStudent = {};
+            const sharedInterests = [];
+
+            Object.entries(interestConnections).forEach(([interest, connectedStudents]) => {
+                if (connectedStudents.length === 1) {
+                    const st = connectedStudents[0];
+                    if (!outerInterestsByStudent[st]) outerInterestsByStudent[st] = [];
+                    outerInterestsByStudent[st].push(interest);
+                } else if (connectedStudents.length > 1) {
+                    sharedInterests.push({ interest, students: connectedStudents });
+                }
+            });
+
+            const interestPositions = {};
+
+            // 4a. Pozície vonkajších štítkov (vejárovite smerom von od študenta)
+            Object.entries(outerInterestsByStudent).forEach(([stName, items]) => {
+                const baseAngle = studentAngles[stName];
+                const count = items.length;
+                const distOuter = 160;
+
+                items.forEach((item, idx) => {
+                    let angle = baseAngle;
+                    if (count > 1) {
+                        const step = 0.22;
+                        const offset = (idx - (count - 1) / 2) * step;
+                        angle = baseAngle + offset;
+                    }
+                    interestPositions[item] = {
+                        x: (R_MAIN + distOuter) * Math.cos(angle),
+                        y: (R_MAIN + distOuter) * Math.sin(angle)
+                    };
+                });
+            });
+
+            // 4b. Pozície vnútorných štítkov (ťažisko prepojených študentov vnútri kruhu)
+            sharedInterests.forEach(({ interest, students }, idx) => {
+                let avgX = 0;
+                let avgY = 0;
+                students.forEach(st => {
+                    avgX += studentPositions[st].x;
+                    avgY += studentPositions[st].y;
+                });
+                avgX /= students.length;
+                avgY /= students.length;
+
+                // Jemný posun podľa indexu pre zabránenie prekrývaniu pri rovnakom ťažisku
+                const jitterDist = 35;
+                const jitterAngle = (idx * 137.5 * Math.PI) / 180;
+                let finalX = avgX * 0.55 + Math.cos(jitterAngle) * jitterDist;
+                let finalY = avgY * 0.55 + Math.sin(jitterAngle) * jitterDist;
+
+                // Zabezpečenie, že vnútorné uzly nepresiahnu 80% polomeru hlavného kruhu
+                const currentDist = Math.hypot(finalX, finalY);
+                const maxInnerRadius = R_MAIN * 0.75;
+                if (currentDist > maxInnerRadius) {
+                    finalX = (finalX / currentDist) * maxInnerRadius;
+                    finalY = (finalY / currentDist) * maxInnerRadius;
+                }
+
+                interestPositions[interest] = { x: finalX, y: finalY };
+            });
+
+            // 5. Zostavenie Vis.js uzlov
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.font = 'bold 15px Arial';
@@ -241,15 +321,19 @@
                 const w = tempCtx.measureText(name).width;
                 if (w > maxTextWidth) maxTextWidth = w;
             });
-
             const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
+
             const nodes = [];
 
-            // Modré kruhové uzly pre študentov
+            // Modré uzly (študenti)
             namesList.forEach(name => {
+                const pos = studentPositions[name];
                 nodes.push({
                     id: name,
                     label: name,
+                    x: pos.x,
+                    y: pos.y,
+                    fixed: { x: true, y: true },
                     shape: 'custom',
                     size: uniformRadius,
                     ctxRenderer: function({ ctx, x, y, state: { selected, hover } }) {
@@ -276,28 +360,6 @@
                 });
             });
 
-            // Zelené obdĺžnikové uzly pre záujmy
-            interestsSet.forEach(interest => {
-                nodes.push({
-                    id: interest,
-                    label: interest,
-                    shape: 'box',
-                    borderRadius: 8,
-                    color: {
-                        background: '#28a745',
-                        border: '#1e7e34',
-                        highlight: { background: '#218838', border: '#145523' }
-                    },
-                    margin: 10,
-                    font: { color: '#ffffff', size: 14, bold: true }
-                });
-            });
-
-            nodesDataSet.clear();
-            edgesDataSet.clear();
-            nodesDataSet.add(nodes);
-            edgesDataSet.add(edges);
-        }
-    </script>
-</body>
-</html>
+            // Zelené štítky (záujmy)
+            Object.keys(interestConnections).forEach(interest => {
+                const pos = interestPositions[interest] || { x: 0, y
