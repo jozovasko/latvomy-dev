@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktívna sieť záujmov – v1.3.0</title>
+    <title>Interaktívna sieť záujmov – v1.4.0</title>
 
     <!-- Vis.js Library for Graph Visualization -->
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -91,15 +91,15 @@
 <body>
 
     <div class="info-bar">
-        <h2>Interaktívna sieť záujmov <span class="badge-version">v1.3.0</span></h2>
-        <p>Preťahuj uzly ľubovoľne veľakrát – položený uzol zostane stáť bez kmitania</p>
+        <h2>Interaktívna sieť záujmov <span class="badge-version">v1.4.0</span></h2>
+        <p>Preťahuj uzly ľubovoľne – položený uzol zostane stáť bez kmitania</p>
     </div>
 
     <div id="status-msg"></div>
     <div id="network-graph"></div>
 
     <script>
-        const APP_VERSION = "v1.3.0";
+        const APP_VERSION = "v1.4.0";
         let network = null;
         let nodesDataSet = null;
         let edgesDataSet = null;
@@ -165,7 +165,7 @@
                     .then(data => {
                         const people = extractPeopleList(data);
                         if (people.length === 0) {
-                            showStatus("Súbor načítaný, ale pole ľudí je prázdne. Používam fallback.", true);
+                            showStatus("Súbor načítaný, ale zoznam žiakov je prázdny. Používam fallback.", true);
                             renderGraphFromData(extractPeopleList(fallbackData));
                         } else {
                             renderGraphFromData(people);
@@ -194,14 +194,14 @@
                     hover: true
                 },
                 edges: {
-                    arrows: { to: { enabled: true, scaleFactor: 0.8 } },
-                    color: { color: '#94a3b8', highlight: '#0284c7', hover: '#64748b' },
+                    arrows: { to: { enabled: true, scaleFactor: 0.75 } },
+                    color: { color: 'rgba(148, 163, 184, 0.75)', highlight: '#0284c7', hover: '#64748b' },
                     smooth: {
                         enabled: true,
-                        type: 'continuous',
-                        roundness: 0.15
+                        type: 'curvedCW',
+                        roundness: 0.12
                     },
-                    width: 1.5
+                    width: 1.4
                 },
                 physics: {
                     enabled: false
@@ -210,7 +210,6 @@
 
             network = new vis.Network(container, data, options);
 
-            // Počas ťahania uzol uvoľníme
             network.on("dragStart", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -221,7 +220,6 @@
                 }
             });
 
-            // Po pustení uzol zafixujeme na novom mieste (žiadne kmitanie)
             network.on("dragEnd", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -233,6 +231,19 @@
             });
         }
 
+        // Vzdialenosť bodu P od úsečky AB
+        function distToSegment(px, py, ax, ay, bx, by) {
+            const l2 = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+            if (l2 === 0) return { d: Math.hypot(px - ax, py - ay), nx: px - ax, ny: py - ay };
+            let t = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const projX = ax + t * (bx - ax);
+            const projY = ay + t * (by - ay);
+            const dx = px - projX;
+            const dy = py - projY;
+            return { d: Math.hypot(dx, dy), nx: dx, ny: dy };
+        }
+
         function renderGraphFromData(peopleList) {
             if (!Array.isArray(peopleList) || peopleList.length === 0) return;
 
@@ -240,7 +251,7 @@
             const interestConnections = {};
             const edges = [];
 
-            // 1. Zber platných študentov a ich neprázdnych záujmov
+            // 1. Zber platných entít
             peopleList.forEach(p => {
                 const name = (p.name || '').trim();
                 if (name !== '') {
@@ -266,11 +277,11 @@
                 }
             });
 
-            // 2. Zoradenie mien študentov v abecednom poradí
+            // 2. Abecedné usporiadanie mien
             namesList.sort((a, b) => a.localeCompare(b, 'sk'));
 
             const N = namesList.length;
-            const R_MAIN = Math.max(380, N * 44); // Polomer kruhu podľa počtu študentov
+            const R_MAIN = Math.max(420, N * 48); // Zväčšený polomer kruhu pre dostatok miesta v strede
             const studentPositions = {};
             const studentAngles = {};
 
@@ -284,7 +295,7 @@
                 };
             });
 
-            // 4. Rozdelenie záujmov na vonkajšie (1 študent) a vnútorné (2+ študenti)
+            // 4. Rozdelenie na vonkajšie a vnútorné uzly
             const outerByStudent = {};
             const sharedInterests = [];
 
@@ -300,7 +311,7 @@
 
             const interestPositions = {};
 
-            // 4a. Vonkajšie zelené štítky: radiálne mimo kruhu vo vejári
+            // 4a. Vonkajšie štítky – mimo kruhu vo vejári
             Object.entries(outerByStudent).forEach(([stName, items]) => {
                 const baseAngle = studentAngles[stName];
                 const count = items.length;
@@ -309,7 +320,7 @@
                 items.forEach((item, idx) => {
                     let angle = baseAngle;
                     if (count > 1) {
-                        const maxSpread = 0.45;
+                        const maxSpread = 0.46;
                         const step = maxSpread / Math.max(1, count - 1);
                         angle = baseAngle - (maxSpread / 2) + (idx * step);
                     }
@@ -320,7 +331,7 @@
                 });
             });
 
-            // 4b. Vnútorné zelené štítky: ťažisko študentov vnútri kruhu s odpudzovaním
+            // 4b. Vnútorné štítky – ťažisko študentov + zlatý rez posunu
             const innerNodes = [];
             sharedInterests.forEach(({ interest, students }, idx) => {
                 let sumX = 0;
@@ -334,31 +345,23 @@
                 let avgX = sumX / students.length;
                 let avgY = sumY / students.length;
 
-                // Jemný odstup pri zhodných ťažiskách
-                const phi = idx * 2.39996; // zlatý uhol
-                const jitterR = 25 + Math.sqrt(idx) * 20;
-                let posX = avgX * 0.42 + Math.cos(phi) * jitterR;
-                let posY = avgY * 0.42 + Math.sin(phi) * jitterR;
+                const phi = idx * 2.39996; // 137.5 stupňa
+                const jitterR = 30 + Math.sqrt(idx) * 25;
+                let posX = avgX * 0.40 + Math.cos(phi) * jitterR;
+                let posY = avgY * 0.40 + Math.sin(phi) * jitterR;
 
-                // Neprekročiť 70% hlavného polomeru
-                const currentDist = Math.hypot(posX, posY);
-                const maxInnerR = R_MAIN * 0.70;
-                if (currentDist > maxInnerR) {
-                    posX = (posX / currentDist) * maxInnerR;
-                    posY = (posY / currentDist) * maxInnerR;
-                }
-
-                innerNodes.push({ id: interest, x: posX, y: posY });
+                innerNodes.push({ id: interest, x: posX, y: posY, students: students });
             });
 
-            // Relaxácia proti prekrývaniu štítkov v strede
-            for (let iter = 0; iter < 50; iter++) {
+            // Optimalizácia: Odpudzovanie vnútorných štítkov navzájom A od prechádzajúcich spojníc
+            for (let iter = 0; iter < 75; iter++) {
+                // 1. Vzájomné odpudzovanie štítkov (box-box kolízia)
                 for (let i = 0; i < innerNodes.length; i++) {
                     for (let j = i + 1; j < innerNodes.length; j++) {
                         const dx = innerNodes[j].x - innerNodes[i].x;
                         const dy = innerNodes[j].y - innerNodes[i].y;
                         const d = Math.hypot(dx, dy) || 1;
-                        const minD = 95;
+                        const minD = 105;
                         if (d < minD) {
                             const shift = (minD - d) / 2;
                             const sx = (dx / d) * shift;
@@ -370,6 +373,37 @@
                         }
                     }
                 }
+
+                // 2. Odpudzovanie štítku od cudzích spojovacích čiar (nech cez štítok neprechádza čiara iného spojenia)
+                for (let i = 0; i < innerNodes.length; i++) {
+                    const node = innerNodes[i];
+                    for (let k = 0; k < innerNodes.length; k++) {
+                        if (i === k) continue;
+                        const otherNode = innerNodes[k];
+                        // Hrany vedúce z otherNode k jeho študentom
+                        otherNode.students.forEach(st => {
+                            const stPos = studentPositions[st];
+                            if (!stPos) return;
+                            const res = distToSegment(node.x, node.y, otherNode.x, otherNode.y, stPos.x, stPos.y);
+                            const minClearance = 52; // Bezpečná vzdialenosť od cudzej spojnice
+                            if (res.d < minClearance && res.d > 0.01) {
+                                const push = (minClearance - res.d) * 0.45;
+                                node.x += (res.nx / res.d) * push;
+                                node.y += (res.ny / res.d) * push;
+                            }
+                        });
+                    }
+                }
+
+                // 3. Udržiavanie štítkov vo vnútornej bezpečnej zóne (max 72% polomeru)
+                const maxInnerR = R_MAIN * 0.72;
+                innerNodes.forEach(node => {
+                    const dCenter = Math.hypot(node.x, node.y);
+                    if (dCenter > maxInnerR) {
+                        node.x = (node.x / dCenter) * maxInnerR;
+                        node.y = (node.y / dCenter) * maxInnerR;
+                    }
+                });
             }
 
             innerNodes.forEach(node => {
@@ -425,7 +459,7 @@
                 });
             });
 
-            // Zelené obdĺžnikové štítky (záujmy)
+            // Zelené štítky (záujmy)
             Object.keys(interestConnections).forEach(interest => {
                 const pos = interestPositions[interest] || { x: 0, y: 0 };
                 nodes.push({
@@ -452,7 +486,6 @@
             nodesDataSet.add(nodes);
             edgesDataSet.add(edges);
 
-            // Redraw a centrovanie pohľadu po inicializácii plátna
             setTimeout(() => {
                 if (network) {
                     network.redraw();
