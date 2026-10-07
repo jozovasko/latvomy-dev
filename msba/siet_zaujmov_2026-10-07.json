@@ -1,0 +1,289 @@
+{
+  "version": 3,
+  "interestCount": 7,
+  "availableInterests": [
+    "Coding",
+    "Gaming",
+    "Cooking",
+    "Music",
+    "3d tlac",
+    "msba",
+    "rozoberanie",
+    "konstrukcia",
+    "varenie",
+    "floorball",
+    "python",
+    "sport",
+    "poc. hry",
+    "programovanie",
+    "robotika",
+    "spajkoval",
+    "plavanie",
+    "spajkovanie",
+    "strelba",
+    "volejbal",
+    "msb",
+    "serm",
+    "fotenie",
+    "lego",
+    "p",
+    "parkour",
+    "3D modelovanie",
+    "3dliga",
+    "Bleder",
+    "AI",
+    "Jhan Academy",
+    "Khan Academy",
+    "el. obvody",
+    "Tyni",
+    "3dliga\\"
+  ],
+  "positions": {
+    "Oliver": {
+      "x": 115,
+      "y": 478
+    },
+    "Elias": {
+      "x": 346,
+      "y": 409
+    },
+    "David": {
+      "x": 342,
+      "y": -299
+    },
+    "Kristof": {
+      "x": 425,
+      "y": -40
+    },
+    "Christian": {
+      "x": -214,
+      "y": 467
+    },
+    "Adam": {
+      "x": 418,
+      "y": 163
+    },
+    "Filip": {
+      "x": 46,
+      "y": -386
+    },
+    "Eduard": {
+      "x": -431,
+      "y": 223
+    },
+    "Riso": {
+      "x": -356,
+      "y": -263
+    },
+    "Ondrej": {
+      "x": -448,
+      "y": 7
+    },
+    "fotenie": {
+      "x": 176,
+      "y": 604
+    },
+    "sport": {
+      "x": 121,
+      "y": 147
+    },
+    "3dliga": {
+      "x": 263,
+      "y": -118
+    },
+    "poc. hry": {
+      "x": -54,
+      "y": 161
+    },
+    "floorball": {
+      "x": 199,
+      "y": 119
+    },
+    "lego": {
+      "x": 54,
+      "y": 43
+    },
+    "3D modelovanie": {
+      "x": -245,
+      "y": 231
+    },
+    "spajkovanie": {
+      "x": -182,
+      "y": 296
+    },
+    "robotika": {
+      "x": 196,
+      "y": 11
+    },
+    "python": {
+      "x": 199,
+      "y": -257
+    },
+    "volejbal": {
+      "x": -84,
+      "y": 579
+    },
+    "el. obvody": {
+      "x": -318,
+      "y": 578
+    },
+    "programovanie": {
+      "x": -147,
+      "y": -181
+    },
+    "Tyni": {
+      "x": 572,
+      "y": 179
+    },
+    "Khan Academy": {
+      "x": -245,
+      "y": 83
+    },
+    "plavanie": {
+      "x": -559,
+      "y": 263
+    },
+    "strelba": {
+      "x": -463,
+      "y": 376
+    },
+    "serm": {
+      "x": -436,
+      "y": -350
+    },
+    "parkour": {
+      "x": -574,
+      "y": 106
+    },
+    "Bleder": {
+      "x": -502,
+      "y": -127
+    },
+    "AI": {
+      "x": -560,
+      "y": 0
+    }
+  },
+  "people": [
+    {
+      "name": "Oliver",
+      "interests": [
+        "",
+        "fotenie",
+        "sport",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Elias",
+      "interests": [
+        "3dliga",
+        "poc. hry",
+        "floorball",
+        "lego",
+        "3D modelovanie",
+        "spajkovanie",
+        "robotika"
+      ]
+    },
+    {
+      "name": "David",
+      "interests": [
+        "3dliga",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Kristof",
+      "interests": [
+        "3dliga",
+        "floorball",
+        "python",
+        "robotika",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Christian",
+      "interests": [
+        "",
+        "volejbal",
+        "poc. hry",
+        "el. obvody",
+        "programovanie",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Adam",
+      "interests": [
+        "3dliga",
+        "sport",
+        "poc. hry",
+        "Tyni",
+        "Khan Academy",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Filip",
+      "interests": [
+        "",
+        "programovanie",
+        "python",
+        "robotika",
+        "lego",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Eduard",
+      "interests": [
+        "",
+        "spajkovanie",
+        "plavanie",
+        "strelba",
+        "lego",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Riso",
+      "interests": [
+        "",
+        "serm",
+        "poc. hry",
+        "lego",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "Ondrej",
+      "interests": [
+        "",
+        "poc. hry",
+        "parkour",
+        "3D modelovanie",
+        "Bleder",
+        "AI",
+        "Khan Academy"
+      ]
+    }
+  ]
+}
