@@ -29,23 +29,23 @@
             top: 15px;
             left: 20px;
             z-index: 10;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             padding: 10px 18px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             pointer-events: none;
         }
 
         .info-bar h2 {
             font-size: 1.15rem;
-            color: #1e293b;
+            color: #0f172a;
             margin-bottom: 2px;
         }
 
         .info-bar p {
             font-size: 0.85rem;
-            color: #64748b;
+            color: #475569;
         }
 
         /* Plátno grafu cez celé okno */
@@ -65,13 +65,14 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(30, 41, 59, 0.9);
+            background: rgba(15, 23, 42, 0.92);
             color: #ffffff;
-            padding: 8px 16px;
+            padding: 9px 18px;
             border-radius: 20px;
             font-size: 0.85rem;
             display: none;
             z-index: 20;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -90,12 +91,12 @@
         let nodesDataSet = null;
         let edgesDataSet = null;
 
-        // Vzorové počiatočné dáta
+        // Vzorové počiatočné dáta (fallback)
         const fallbackData = {
             people: [
                 { name: "Adam", interests: ["Tyni", "Bleder", "Khan Academy", "parkour", "poc. hry", "3dliga"] },
                 { name: "Christian", interests: ["el. obvody", "volejbal", "lego", "spajkovanie", "poc. hry", "programovanie"] },
-                { name: "David", interests: ["poc. hry", "3dliga", "Elias"] },
+                { name: "David", interests: ["poc. hry", "3dliga"] },
                 { name: "Eduard", interests: ["strelba", "plavanie", "lego", "spajkovanie"] },
                 { name: "Elias", interests: ["poc. hry", "3dliga", "3D modelovanie", "robotika", "floorball", "spajkovanie"] },
                 { name: "Filip", interests: ["programovanie", "robotika", "python", "spajkovanie"] },
@@ -114,9 +115,18 @@
         function showStatus(msg, isError = false) {
             const el = document.getElementById('status-msg');
             el.innerText = msg;
-            el.style.backgroundColor = isError ? 'rgba(220, 53, 69, 0.95)' : 'rgba(30, 41, 59, 0.9)';
+            el.style.backgroundColor = isError ? 'rgba(220, 38, 38, 0.95)' : 'rgba(15, 23, 42, 0.92)';
             el.style.display = 'block';
             setTimeout(() => { el.style.display = 'none'; }, 4000);
+        }
+
+        function extractPeopleList(raw) {
+            if (!raw) return [];
+            if (Array.isArray(raw)) return raw;
+            if (Array.isArray(raw.people)) return raw.people;
+            if (Array.isArray(raw.ziaci)) return raw.ziaci;
+            if (Array.isArray(raw.students)) return raw.students;
+            return [];
         }
 
         function loadGraphFromUrl() {
@@ -127,27 +137,33 @@
             if (rawJson) {
                 try {
                     const parsed = JSON.parse(rawJson);
-                    renderGraphFromData(parsed);
+                    renderGraphFromData(extractPeopleList(parsed));
                 } catch (e) {
                     showStatus("Chyba v JSON parametri: " + e.message, true);
-                    renderGraphFromData(fallbackData);
+                    renderGraphFromData(extractPeopleList(fallbackData));
                 }
             } else if (dataUrl) {
-                showStatus("Načítavam dáta zo súboru: " + dataUrl);
-                fetch(dataUrl)
+                showStatus("Načítavam: " + dataUrl);
+                fetch(dataUrl, { cache: 'no-cache' })
                     .then(response => {
-                        if (!response.ok) throw new Error("Súbor sa nenašiel (HTTP " + response.status + ")");
+                        if (!response.ok) throw new Error("HTTP " + response.status + " - súbor sa nenašiel");
                         return response.json();
                     })
                     .then(data => {
-                        renderGraphFromData(data);
+                        const people = extractPeopleList(data);
+                        if (people.length === 0) {
+                            showStatus("Súbor bol načítaný, ale neobsahuje zoznam ľudí. Používam fallback.", true);
+                            renderGraphFromData(extractPeopleList(fallbackData));
+                        } else {
+                            renderGraphFromData(people);
+                        }
                     })
                     .catch(err => {
-                        showStatus("Nepodarilo sa načítať JSON súbor. Zobrazujem predvolené dáta.", true);
-                        renderGraphFromData(fallbackData);
+                        showStatus("Chyba: " + err.message + ". Zobrazujem fallback.", true);
+                        renderGraphFromData(extractPeopleList(fallbackData));
                     });
             } else {
-                renderGraphFromData(fallbackData);
+                renderGraphFromData(extractPeopleList(fallbackData));
             }
         }
 
@@ -165,10 +181,14 @@
                     hover: true
                 },
                 edges: {
-                    arrows: { to: { enabled: true, scaleFactor: 0.85 } },
-                    color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#64748b' },
-                    smooth: { type: 'continuous' },
-                    width: 1.5
+                    arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                    color: { color: '#94a3b8', highlight: '#0284c7', hover: '#64748b' },
+                    smooth: {
+                        enabled: true,
+                        type: 'continuous',
+                        roundness: 0.15
+                    },
+                    width: 1.6
                 },
                 physics: {
                     enabled: false
@@ -177,6 +197,7 @@
 
             network = new vis.Network(container, data, options);
 
+            // Pri ťahaní uzla dočasne odopneme fixáciu
             network.on("dragStart", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -187,6 +208,7 @@
                 }
             });
 
+            // Po pustení uzol natrvalo zafixujeme na novom mieste (bez kmitania)
             network.on("dragEnd", function(params) {
                 if (params.nodes && params.nodes.length > 0) {
                     const updates = params.nodes.map(nodeId => ({
@@ -198,46 +220,48 @@
             });
         }
 
-        function renderGraphFromData(dataObj) {
-            if (!dataObj || !dataObj.people) return;
+        function renderGraphFromData(peopleList) {
+            if (!Array.isArray(peopleList) || peopleList.length === 0) return;
 
-            const people = dataObj.people;
             const namesList = [];
             const interestConnections = {};
             const edges = [];
 
-            // 1. Zber mien a záujmov
-            people.forEach(p => {
+            // 1. Zber uzlov a relácií
+            peopleList.forEach(p => {
                 const name = (p.name || '').trim();
                 if (name !== '') {
                     if (!namesList.includes(name)) namesList.push(name);
 
-                    if (Array.isArray(p.interests)) {
-                        p.interests.forEach(interest => {
-                            const trimmed = (interest || '').trim();
-                            if (trimmed !== '') {
-                                if (!interestConnections[trimmed]) {
-                                    interestConnections[trimmed] = [];
-                                }
-                                if (!interestConnections[trimmed].includes(name)) {
-                                    interestConnections[trimmed].push(name);
-                                }
-                                edges.push({ from: name, to: trimmed });
+                    const interests = Array.isArray(p.interests) ? p.interests : (Array.isArray(p.zaujmy) ? p.zaujmy : []);
+                    interests.forEach(interest => {
+                        const trimmed = (interest || '').trim();
+                        if (trimmed !== '') {
+                            if (!interestConnections[trimmed]) {
+                                interestConnections[trimmed] = [];
                             }
-                        });
-                    }
+                            if (!interestConnections[trimmed].includes(name)) {
+                                interestConnections[trimmed].push(name);
+                            }
+                            edges.push({
+                                id: `e_${name}_${trimmed}`,
+                                from: name,
+                                to: trimmed
+                            });
+                        }
+                    });
                 }
             });
 
-            // 2. Abecedné zoradenie mien
+            // 2. Abecedné zoradenie mien študentov (slovenské pravidlá radenia)
             namesList.sort((a, b) => a.localeCompare(b, 'sk'));
 
             const N = namesList.length;
-            const R_MAIN = Math.max(380, N * 42); // Polomer hlavného kruhu
+            const R_MAIN = Math.max(340, N * 42); // Polomer hlavného kruhu
             const studentPositions = {};
             const studentAngles = {};
 
-            // 3. Rozmiestnenie modrých uzlov v smere hodinových ručičiek (od 12:00)
+            // 3. Rozmiestnenie modrých uzlov v smere hodinových ručičiek od 12:00 (-PI / 2)
             namesList.forEach((name, index) => {
                 const angle = -Math.PI / 2 + (2 * Math.PI * index) / N;
                 studentAngles[name] = angle;
@@ -247,24 +271,24 @@
                 };
             });
 
-            // 4. Rozdelenie záujmov na vonkajšie (1 študent) a vnútorné (2+ študenti)
-            const outerInterestsByStudent = {};
+            // 4. Rozdelenie štítkov: vonkajšie (len pre 1 študenta) vs vnútorné (pre 2 a viac)
+            const outerByStudent = {};
             const sharedInterests = [];
 
-            Object.entries(interestConnections).forEach(([interest, connectedStudents]) => {
-                if (connectedStudents.length === 1) {
-                    const st = connectedStudents[0];
-                    if (!outerInterestsByStudent[st]) outerInterestsByStudent[st] = [];
-                    outerInterestsByStudent[st].push(interest);
-                } else if (connectedStudents.length > 1) {
-                    sharedInterests.push({ interest, students: connectedStudents });
+            Object.entries(interestConnections).forEach(([interest, students]) => {
+                if (students.length === 1) {
+                    const st = students[0];
+                    if (!outerByStudent[st]) outerByStudent[st] = [];
+                    outerByStudent[st].push(interest);
+                } else {
+                    sharedInterests.push({ interest, students });
                 }
             });
 
             const interestPositions = {};
 
-            // 4a. Pozície vonkajších štítkov (vejárovite smerom von od študenta)
-            Object.entries(outerInterestsByStudent).forEach(([stName, items]) => {
+            // 4a. Vonkajšie štítky – radiálne mimo kruhu vo vejári
+            Object.entries(outerByStudent).forEach(([stName, items]) => {
                 const baseAngle = studentAngles[stName];
                 const count = items.length;
                 const distOuter = 160;
@@ -272,7 +296,7 @@
                 items.forEach((item, idx) => {
                     let angle = baseAngle;
                     if (count > 1) {
-                        const step = 0.22;
+                        const step = Math.min(0.28, (2 * Math.PI) / (N * 1.6 * count));
                         const offset = (idx - (count - 1) / 2) * step;
                         angle = baseAngle + offset;
                     }
@@ -283,35 +307,63 @@
                 });
             });
 
-            // 4b. Pozície vnútorných štítkov (ťažisko prepojených študentov vnútri kruhu)
+            // 4b. Vnútorné štítky – v ťažisku zúčastnených študentov s rozptylom proti kolíziám
+            const innerNodes = [];
             sharedInterests.forEach(({ interest, students }, idx) => {
-                let avgX = 0;
-                let avgY = 0;
+                let sumX = 0;
+                let sumY = 0;
                 students.forEach(st => {
-                    avgX += studentPositions[st].x;
-                    avgY += studentPositions[st].y;
+                    if (studentPositions[st]) {
+                        sumX += studentPositions[st].x;
+                        sumY += studentPositions[st].y;
+                    }
                 });
-                avgX /= students.length;
-                avgY /= students.length;
+                let avgX = sumX / students.length;
+                let avgY = sumY / students.length;
 
-                // Jemný posun podľa indexu pre zabránenie prekrývaniu pri rovnakom ťažisku
-                const jitterDist = 35;
-                const jitterAngle = (idx * 137.5 * Math.PI) / 180;
-                let finalX = avgX * 0.55 + Math.cos(jitterAngle) * jitterDist;
-                let finalY = avgY * 0.55 + Math.sin(jitterAngle) * jitterDist;
+                // Odstredivý posun pri prekrývaní v geometrickom strede (zlatý uhol)
+                const phi = idx * 2.39996; // ~137.5 stupňa
+                const spiralR = 30 + Math.sqrt(idx) * 22;
+                let posX = avgX * 0.45 + Math.cos(phi) * spiralR;
+                let posY = avgY * 0.45 + Math.sin(phi) * spiralR;
 
-                // Zabezpečenie, že vnútorné uzly nepresiahnu 80% polomeru hlavného kruhu
-                const currentDist = Math.hypot(finalX, finalY);
-                const maxInnerRadius = R_MAIN * 0.75;
-                if (currentDist > maxInnerRadius) {
-                    finalX = (finalX / currentDist) * maxInnerRadius;
-                    finalY = (finalY / currentDist) * maxInnerRadius;
+                // Neprekročiť 70% polomeru hlavného kruhu
+                const distCenter = Math.hypot(posX, posY);
+                const maxInnerR = R_MAIN * 0.68;
+                if (distCenter > maxInnerR) {
+                    posX = (posX / distCenter) * maxInnerR;
+                    posY = (posY / distCenter) * maxInnerR;
                 }
 
-                interestPositions[interest] = { x: finalX, y: finalY };
+                innerNodes.push({ id: interest, x: posX, y: posY });
             });
 
-            // 5. Zostavenie Vis.js uzlov
+            // Iteratívna relaxácia vnútorných štítkov proti vzájomnému prekrytiu
+            for (let iter = 0; iter < 45; iter++) {
+                for (let i = 0; i < innerNodes.length; i++) {
+                    for (let j = i + 1; j < innerNodes.length; j++) {
+                        const dx = innerNodes[j].x - innerNodes[i].x;
+                        const dy = innerNodes[j].y - innerNodes[i].y;
+                        const d = Math.hypot(dx, dy) || 1;
+                        const minD = 90;
+                        if (d < minD) {
+                            const shift = (minD - d) / 2;
+                            const sx = (dx / d) * shift;
+                            const sy = (dy / d) * shift;
+                            innerNodes[i].x -= sx;
+                            innerNodes[i].y -= sy;
+                            innerNodes[j].x += sx;
+                            innerNodes[j].y += sy;
+                        }
+                    }
+                }
+            }
+
+            innerNodes.forEach(node => {
+                interestPositions[node.id] = { x: node.x, y: node.y };
+            });
+
+            // 5. Zostavenie uzlov
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.font = 'bold 15px Arial';
@@ -321,11 +373,11 @@
                 const w = tempCtx.measureText(name).width;
                 if (w > maxTextWidth) maxTextWidth = w;
             });
-            const uniformRadius = Math.max(30, Math.round((maxTextWidth / 2) + 16));
+            const uniformRadius = Math.max(32, Math.round((maxTextWidth / 2) + 16));
 
             const nodes = [];
 
-            // Modré uzly (študenti)
+            // Modré kruhové uzly (študenti)
             namesList.forEach(name => {
                 const pos = studentPositions[name];
                 nodes.push({
@@ -342,10 +394,10 @@
                             drawNode() {
                                 ctx.beginPath();
                                 ctx.arc(x, y, r, 0, 2 * Math.PI, false);
-                                ctx.fillStyle = selected ? '#0056b3' : (hover ? '#0069d9' : '#007bff');
+                                ctx.fillStyle = selected ? '#1d4ed8' : (hover ? '#2563eb' : '#0284c7');
                                 ctx.fill();
                                 ctx.lineWidth = 2.5;
-                                ctx.strokeStyle = selected ? '#003875' : '#0056b3';
+                                ctx.strokeStyle = selected ? '#1e3a8a' : '#0369a1';
                                 ctx.stroke();
 
                                 ctx.font = 'bold 15px Arial';
@@ -360,6 +412,45 @@
                 });
             });
 
-            // Zelené štítky (záujmy)
+            // Zelené obdĺžnikové štítky (záujmy)
             Object.keys(interestConnections).forEach(interest => {
-                const pos = interestPositions[interest] || { x: 0, y
+                const pos = interestPositions[interest] || { x: 0, y: 0 };
+                nodes.push({
+                    id: interest,
+                    label: interest,
+                    x: pos.x,
+                    y: pos.y,
+                    fixed: { x: true, y: true },
+                    shape: 'box',
+                    borderRadius: 6,
+                    color: {
+                        background: '#16a34a',
+                        border: '#15803d',
+                        highlight: { background: '#15803d', border: '#166534' }
+                    },
+                    margin: 8,
+                    font: { color: '#ffffff', size: 13, bold: true }
+                });
+            });
+
+            // 6. Odovzdanie do Vis.js a vycentrovanie kamery
+            nodesDataSet.clear();
+            edgesDataSet.clear();
+            nodesDataSet.add(nodes);
+            edgesDataSet.add(edges);
+
+            // Centrujeme po vykreslení, aby neostala prázdna plocha
+            setTimeout(() => {
+                if (network) {
+                    network.fit({
+                        animation: {
+                            duration: 400,
+                            easingFunction: 'easeInOutQuad'
+                        }
+                    });
+                }
+            }, 60);
+        }
+    </script>
+</body>
+</html>
