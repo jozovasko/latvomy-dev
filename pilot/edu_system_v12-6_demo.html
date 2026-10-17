@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaptAI MagneGrid Mini: Hmatové Hniezda</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a; --bg-card: #1e293b; --primary: #3b82f6; 
+            --success: #10b981; --warn: #f59e0b; --danger: #ef4444; 
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark); color: var(--text-main);
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
+            user-select: none; overflow: hidden;
+        }
+        header {
+            background-color: var(--bg-card); padding: 12px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        header h1 { margin: 0; font-size: 1.35rem; color: #60a5fa; }
+        .header-tools { display: flex; gap: 10px; align-items: center; }
+        .btn {
+            padding: 9px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
+            border: none; color: white; transition: 0.2s; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-usb-connect { background-color: #2563eb; }
+        .btn-usb-disconnect { background-color: #dc2626 !important; }
+        .btn-cal { background-color: #d97706; }
+        .btn-rst { background-color: #7c3aed; }
+        #status-pill { font-family: monospace; font-size: 0.9rem; color: var(--text-muted); }
+
+        .rx-badge {
+            display: inline-flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.85rem;
+            background: #0f172a; padding: 6px 12px; border-radius: 6px; border: 1px solid #334155;
+        }
+        .rx-dot {
+            width: 11px; height: 11px; border-radius: 50%; background: #475569;
+            transition: background 0.05s, box-shadow 0.05s;
+        }
+        .rx-dot.active { background: #22c55e !important; box-shadow: 0 0 10px #22c55e !important; }
+
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+        .board-viewport {
+            flex: 6; padding: 20px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .board-container {
+            width: 100%; max-width: 580px; aspect-ratio: 1/1;
+            background-color: #f8fafc; border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            position: relative; border: 4px solid #cbd5e1;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .board-header-bar {
+            height: 36px; background: #e2e8f0; border-bottom: 2px solid #cbd5e1;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; font-weight: bold; color: #334155; font-size: 0.85rem;
+        }
+        .board-svg { width: 100%; height: 100%; flex: 1; display: block; }
+        
+        .slot-shape {
+            fill: rgba(59, 130, 246, 0.08); stroke: #3b82f6; stroke-width: 2.0; stroke-dasharray: 4,2;
+            cursor: pointer; transition: 0.25s ease;
+        }
+        .slot-shape:hover { fill: rgba(59, 130, 246, 0.18); stroke-width: 2.8; }
+        .slot-shape.active {
+            fill: rgba(34, 197, 94, 0.35) !important;
+            stroke: #16a34a !important; stroke-width: 4.0 !important; stroke-dasharray: none;
+            filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.8));
+        }
+
+        .sensor-dimple { fill: #64748b; stroke: #0f172a; stroke-width: 0.8; transition: fill 0.1s; }
+        .sensor-dimple.hot-north { fill: #ef4444 !important; stroke: #b91c1c; }
+        .sensor-dimple.hot-south { fill: #3b82f6 !important; stroke: #1d4ed8; }
+        .sensor-label { font-size: 2.6px; font-family: monospace; fill: #1e293b; text-anchor: middle; font-weight: 900; }
+        .slot-title { font-size: 3.4px; font-family: sans-serif; fill: #1e40af; font-weight: bold; text-anchor: middle; pointer-events: none; }
+
+        .didactic-sidebar {
+            flex: 4; background-color: var(--bg-card); border-left: 2px solid #334155;
+            padding: 28px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .story-card {
+            background-color: #0f172a; border-radius: 14px; padding: 24px;
+            border-left: 6px solid var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .story-badge {
+            display: inline-block; background: #1e3a8a; color: #93c5fd; font-size: 0.8rem;
+            font-weight: bold; padding: 4px 10px; border-radius: 4px; margin-bottom: 12px;
+        }
+        .story-header { font-size: 1.5rem; font-weight: bold; color: #fbbf24; margin-bottom: 12px; }
+        .story-text { font-size: 1.1rem; line-height: 1.6; color: #f8fafc; }
+        
+        .feedback-banner {
+            margin-top: 20px; padding: 16px; border-radius: 10px; font-weight: bold;
+            font-size: 1.1nim; display: none; text-align: center;
+        }
+        .feedback-banner.show { display: block; animation: popIn 0.25s ease-out; }
+        .feedback-banner.ok { background: #064e3b; color: #6ee7b7; border: 2px solid #10b981; }
+
+        .figure-legend {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
+        }
+        .legend-item {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px;
+            display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 0.95rem; color: #94a3b8;
+        }
+        .legend-item.lit { border-color: #10b981; background: #064e3b; color: #6ee7b7; }
+
+        .footer-note {
+            background: #1e1b4b; border: 1px solid #4f46e5; border-radius: 10px; padding: 14px;
+            font-size: 0.88rem; color: #c7d2fe; line-height: 1.5;
+        }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>HaptAI MagneGrid Mini: Hmatové Hniezda</h1>
+            <span id="status-pill">Stav: USB Odpojené</span>
+        </div>
+        <div class="header-tools">
+            <div class="rx-badge">
+                <div id="rx-dot" class="rx-dot"></div>
+                <span id="rx-hz">0 Hz</span>
+            </div>
+            <button id="btn-usb" class="btn btn-usb-connect" onclick="toggleUSB()">🔌 Pripojiť USB</button>
+            <button class="btn btn-rst" onclick="sendPicoStart()">⚡ Štart Pico</button>
+            <button class="btn btn-cal" onclick="tareSensors()">🎯 Nulovať</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="board-viewport">
+            <div class="board-container">
+                <div class="board-header-bar">
+                    <span>INKLUZÍVNA ŠABLÓNA: DOSKA 1-1</span>
+                    <span>Formát A5 (150 × 150 mm)</span>
+                </div>
+
+                <svg class="board-svg" viewBox="0 0 150 150">
+                    <rect x="0" y="0" width="150" height="150" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                    <rect x="20" y="20" width="110" height="90" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"/>
+                    <rect x="112" y="44" width="16" height="42" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                    <text x="120" y="66" font-size="2.8" fill="#64748b" text-anchor="middle" font-family="monospace" transform="rotate(-90 120 66)">MUX CD74HC4067</text>
+
+                    <!-- Priehľadné hniezda -->
+                    <rect id="slot-lampa" class="slot-shape" x="24" y="20" width="38" height="38" rx="2" onclick="manualSim('lampa')"/>
+                    <polygon id="slot-dieta" class="slot-shape" points="75,45 105,25 120,40 108,62" onclick="manualSim('dieta')"/>
+                    <polygon id="slot-hrncek" class="slot-shape" points="48,60 76,68 66,98 34,95 24,72" onclick="manualSim('hrncek')"/>
+                    <circle id="slot-medvedik" class="slot-shape" cx="106" cy="85" r="16" onclick="manualSim('medvedik')"/>
+
+                    <text x="43" y="27" class="slot-title">💡 LAMPA</text>
+                    <text x="100" y="32" class="slot-title">👶 DIEŤA</text>
+                    <text x="50" y="70" class="slot-title">☕ HRNČEK</text>
+                    <text x="106" y="86" class="slot-title">🧸 MEDVEDÍK</text>
+
+                    <!-- Senzory v popredí -->
+                    <circle id="sd-0" class="sensor-dimple" cx="33" cy="28.6" r="2.8"/><circle id="sd-1" class="sensor-dimple" cx="58" cy="28.6" r="2.8"/><circle id="sd-2" class="sensor-dimple" cx="83" cy="28.6" r="2.8"/><circle id="sd-3" class="sensor-dimple" cx="108" cy="28.6" r="2.8"/>
+                    <circle id="sd-4" class="sensor-dimple" cx="45.5" cy="50.25" r="2.8"/><circle id="sd-5" class="sensor-dimple" cx="70.5" cy="50.25" r="2.8"/><circle id="sd-6" class="sensor-dimple" cx="95.5" cy="50.25" r="2.8"/><circle id="sd-7" class="sensor-dimple" cx="120.5" cy="50.25" r="2.8"/>
+                    <circle id="sd-8" class="sensor-dimple" cx="33" cy="71.9" r="2.8"/><circle id="sd-9" class="sensor-dimple" cx="58" cy="71.9" r="2.8"/><circle id="sd-10" class="sensor-dimple" cx="83" cy="71.9" r="2.8"/><circle id="sd-11" class="sensor-dimple" cx="108" cy="71.9" r="2.8"/>
+                    <circle id="sd-12" class="sensor-dimple" cx="45.5" cy="93.55" r="2.8"/><circle id="sd-13" class="sensor-dimple" cx="70.5" cy="93.55" r="2.8"/><circle id="sd-14" class="sensor-dimple" cx="95.5" cy="93.55" r="2.8"/><circle id="sd-15" class="sensor-dimple" cx="120.5" cy="93.55" r="2.8"/>
+
+                    <text x="33" y="33.5" class="sensor-label">S0</text><text x="58" y="33.5" class="sensor-label">S1</text><text x="83" y="33.5" class="sensor-label">S2</text><text x="108" y="33.5" class="sensor-label">S3</text>
+                    <text x="45.5" y="55" class="sensor-label">S4</text><text x="70.5" y="55" class="sensor-label">S5</text><text x="95.5" y="55" class="sensor-label">S6</text><text x="120.5" y="55" class="sensor-label">S7</text>
+                    <text x="33" y="76.8" class="sensor-label">S8</text><text x="58" y="76.8" class="sensor-label">S9</text><text x="83" y="76.8" class="sensor-label">S10</text><text x="108" y="76.8" class="sensor-label">S11</text>
+                    <text x="45.5" y="98.5" class="sensor-label">S12</text><text x="70.5" y="98.5" class="sensor-label">S13</text><text x="95.5" y="98.5" class="sensor-label">S14</text><text x="120.5" y="98.5" class="sensor-label">S15</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="didactic-sidebar">
+            <div>
+                <div class="story-card">
+                    <span class="story-badge">HMAT • SLUCH • PRIESTOR</span>
+                    <div class="story-header" id="storyTitle">Objavujte tvary dotykom</div>
+                    <div class="story-text" id="storyPrompt">
+                        Položte na dosku ľubovoľnú figúrku. Každý tvar má svoj vlastný zvuk a miesto v príbehu.
+                    </div>
+                    <div id="storyFeedback" class="feedback-banner"></div>
+                </div>
+
+                <div class="figure-legend">
+                    <div id="leg-lampa" class="legend-item">💡 Štvorec – Lampa</div>
+                    <div id="leg-dieta" class="legend-item">👶 Lichobežník – Dieťa</div>
+                    <div id="leg-hrncek" class="legend-item">☕ Päťuholník – Hrnček</div>
+                    <div id="leg-medvedik" class="legend-item">🧸 Kruh – Medvedík</div>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                <b>Trnka n.o. • Projekt HaptAI / 3D Komenský</b><br>
+                Synestézia hmatu a zvuku pre inkluzívne vzdelávanie nevidiacich a vidiacich detí pri jednom stole.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+
+            if (type === 'hrncek') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'medvedik') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(130, now);
+                osc.frequency.linearRampToValueAtTime(210, now + 0.12);
+                osc.frequency.linearRampToValueAtTime(150, now + 0.28);
+                gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'dieta') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.09);
+                osc.frequency.setValueAtTime(783.99, now + 0.18);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'lampa') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(350, now);
+                gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                osc.start(now); osc.stop(now + 0.09);
+            }
+        }
+
+        function speak(text) {
+            try {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'sk-SK';
+                window.speechSynthesis.speak(u);
+            } catch(e) {}
+        }
+
+        const figConfig = {
+            'hrncek': { name: '☕ Hrnček na teplý čaj', succ: 'Výborne! Hrnček s čajom má päť rohov a sedí na mieste.' },
+            'medvedik': { name: '🧸 Verný medvedík', succ: 'Brum-brum! Medvedík s okrúhlym podstavcom je vo svojom pelechu.' },
+            'dieta': { name: '👶 Kamarát na hranie', succ: 'Ahoj! Kamarát sa už teší na spoločnú hru.' },
+            'lampa': { name: '💡 Nočná lampa', succ: 'Klik! Štvorcová lampa svieti a osvetľuje celú izbičku.' }
+        };
+
+        let lastActiveFig = null;
+        let isLocked = false;
+
+        function triggerSuccess(figId) {
+            if (isLocked || lastActiveFig === figId) return;
+            isLocked = true;
+            lastActiveFig = figId;
+
+            clearSlots();
+            const el = document.getElementById('slot-' + figId);
+            if (el) el.classList.add('active');
+            const leg = document.getElementById('leg-' + figId);
+            if (leg) leg.classList.add('lit');
+
+            playSound(figId);
+
+            const cfg = figConfig[figId];
+            document.getElementById('storyTitle').innerText = cfg.name;
+            const fb = document.getElementById('storyFeedback');
+            fb.className = 'feedback-banner show ok';
+            fb.innerText = cfg.succ;
+            speak(cfg.succ);
+
+            setTimeout(() => { isLocked = false; }, 1200);
+        }
+
+        function clearSlots() {
+            const slots = document.querySelectorAll('.slot-shape');
+            for (let i = 0; i < slots.length; i++) slots[i].classList.remove('active');
+            const legs = document.querySelectorAll('.legend-item');
+            for (let i = 0; i < legs.length; i++) legs[i].classList.remove('lit');
+        }
+
+        // WebSerial obsluha
+        let port = null, activeReader = null, isRunning = false;
+        let packetCount = 0, lastPacketTime = performance.now();
+        let dynamicOffsetsMV = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let currentPicoMV = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+
+        function tareSensors() {
+            for (let i = 0; i < 16; i++) dynamicOffsetsMV[i] = currentPicoMV[i];
+            if (port && port.writable) {
+                try {
+                    const w = port.writable.getWriter();
+                    w.write(new TextEncoder().encode("C\n"));
+                    w.releaseLock();
+                } catch(e) {}
+            }
+            speak("Senzory vynulované.");
+            clearSlots();
+            lastActiveFig = null;
+        }
+
+        async function sendPicoStart() {
+            if (port && port.writable) {
+                try {
+                    const w = port.writable.getWriter();
+                    await w.write(new Uint8Array([3, 3, 4]));
+                    w.releaseLock();
+                    speak("Spúšťam program.");
+                } catch(e) {}
+            } else {
+                alert("Najprv pripojte USB.");
+            }
+        }
+
+        async function toggleUSB() {
+            const btn = document.getElementById('btn-usb');
+            const pill = document.getElementById('status-pill');
+
+            if (port) {
+                isRunning = false;
+                if (activeReader) { try { await activeReader.cancel(); } catch(e) {} }
+                setTimeout(async () => {
+                    try { if (port) await port.close(); } catch(e) {}
+                    port = null; activeReader = null;
+                    btn.innerText = "🔌 Pripojiť USB"; btn.className = "btn btn-usb-connect";
+                    pill.innerText = "Stav: USB Odpojené";
+                    document.getElementById('rx-dot').classList.remove('active');
+                    document.getElementById('rx-hz').innerText = "0 Hz";
+                }, 100);
+            } else {
+                try {
+                    port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 115200 });
+                    try { await port.setSignals({ dataTerminalReady: true, requestToSend: true }); } catch(e) {}
+
+                    isRunning = true;
+                    btn.innerText = "🔴 Odpojiť Pico"; btn.className = "btn btn-usb-disconnect";
+                    pill.innerText = "Stav: USB Pripojené";
+
+                    initAudio();
+                    speak("USB pripojené.");
+                    readLoop();
+
+                    setTimeout(() => sendPicoStart(), 300);
+                } catch(err) {
+                    btn.innerText = "🔌 Pripojiť USB"; btn.className = "btn btn-usb-connect";
+                }
+            }
+        }
+
+        async function readLoop() {
+            const decoder = new TextDecoder();
+            let buf = "";
+            const rxDot = document.getElementById('rx-dot');
+            const pill = document.getElementById('status-pill');
+
+            try {
+                while (port && port.readable && isRunning) {
+                    activeReader = port.readable.getReader();
+                    try {
+                        while (isRunning) {
+                            const res = await activeReader.read();
+                            if (res.done) break;
+
+                            rxDot.classList.add('active');
+                            setTimeout(() => rxDot.classList.remove('active'), 40);
+                            pill.innerText = "Stav: Online • Prúdia dáta";
+
+                            buf += decoder.decode(res.value, { stream: true });
+                            let lines = buf.split('\n');
+                            buf = lines.pop();
+
+                            for (let idx = 0; idx < lines.length; idx++) {
+                                const tr = lines[idx].trim();
+                                if (tr.charAt(0) === '{' && tr.charAt(tr.length - 1) === '}') {
+                                    packetCount++;
+                                    try { renderData(JSON.parse(tr)); } catch(e) {}
+                                }
+                            }
+                        }
+                    } finally {
+                        activeReader.releaseLock();
+                        activeReader = null;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        const ACTIVE_THRESHOLD_MV = 16;
+
+        function renderData(data) {
+            const now = performance.now();
+            if (now - lastPacketTime >= 1000) {
+                document.getElementById('rx-hz').innerText = packetCount + ' Hz';
+                packetCount = 0;
+                lastPacketTime = now;
+            }
+
+            let maxAbs = 0, maxSensor = -1;
+            const deltas_mv = data.deltas_mv;
+
+            for (let i = 0; i < 16; i++) {
+                let p_mv = 0;
+                if (deltas_mv && deltas_mv[i] !== undefined) p_mv = deltas_mv[i];
+                else if (data.deltas && data.deltas[i] !== undefined) {
+                    p_mv = Math.abs(data.deltas[i]) < 5.0 ? Math.round(data.deltas[i] * 1000) : Math.round(data.deltas[i]);
+                } else if (data['s' + i] !== undefined) {
+                    p_mv = Math.abs(data['s' + i]) < 5.0 ? Math.round(data['s' + i] * 1000) : Math.round(data['s' + i]);
+                }
+
+                currentPicoMV[i] = p_mv;
+                let net_mv = p_mv - dynamicOffsetsMV[i];
+                const abs_mv = Math.abs(net_mv);
+
+                if (abs_mv > maxAbs) {
+                    maxAbs = abs_mv; maxSensor = i;
+                }
+
+                const dimpleEl = document.getElementById('sd-' + i);
+                if (dimpleEl) {
+                    dimpleEl.className = 'sensor-dimple';
+                    if (abs_mv >= ACTIVE_THRESHOLD_MV) {
+                        dimpleEl.classList.add(net_mv >= 0 ? 'hot-north' : 'hot-south');
+                    }
+                }
+            }
+
+            if (maxAbs >= ACTIVE_THRESHOLD_MV) {
+                if ([1, 4, 0, 5, 8].indexOf(maxSensor) !== -1) triggerSuccess('lampa');
+                else if ([13, 9, 12].indexOf(maxSensor) !== -1) triggerSuccess('hrncek');
+                else if ([7, 3, 6, 2].indexOf(maxSensor) !== -1) triggerSuccess('dieta');
+                else if ([15, 11, 14, 10].indexOf(maxSensor) !== -1) triggerSuccess('medvedik');
+            } else {
+                clearSlots();
+                lastActiveFig = null;
+            }
+        }
+
+        function manualSim(figId) {
+            triggerSuccess(figId);
+        }
+    </script>
+</body>
+</html>
