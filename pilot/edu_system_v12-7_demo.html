@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaptAI MagneGrid Mini: Hmatové Hniezda (v12.7 BT)</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a; --bg-card: #1e293b; --primary: #3b82f6; 
+            --success: #10b981; --warn: #f59e0b; --danger: #ef4444; 
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark); color: var(--text-main);
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
+            user-select: none; overflow: hidden;
+        }
+        header {
+            background-color: var(--bg-card); padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+        header h1 { margin: 0; font-size: 1.15rem; color: #60a5fa; }
+        .header-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;
+            border: none; color: white; transition: 0.2s; font-size: 0.84rem; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-usb { background-color: #2563eb; }
+        .btn-bt { background-color: #0284c7; box-shadow: 0 0 10px rgba(2, 132, 199, 0.4); }
+        .btn-connected { background-color: #dc2626 !important; }
+        .btn-stop { background-color: #b91c1c; }
+        .btn-cal { background-color: #d97706; }
+        .btn-nfc { background-color: #0d9488; }
+        .btn-service { background-color: #475569; }
+        .btn-service.active { background-color: #7c3aed; box-shadow: 0 0 10px rgba(124, 58, 237, 0.5); }
+        .btn-game-mode { background-color: #1e3a8a; border: 1px solid #3b82f6; }
+        #status-pill { font-family: monospace; font-size: 0.85rem; color: var(--text-muted); }
+
+        /* SERVISNÁ LIŠTA (V PREZENTAČNOM MÓDE SKRYTÁ) */
+        .service-bar {
+            background-color: #0b1120; border-bottom: 1px solid #334155; padding: 6px 20px;
+            display: none; align-items: center; justify-content: space-between; font-size: 0.8rem;
+        }
+        .service-bar.visible { display: flex; }
+        .telemetry-group { display: flex; align-items: center; gap: 12px; font-family: monospace; color: #cbd5e1; }
+        .rx-dot {
+            width: 9px; height: 9px; border-radius: 50%; background: #475569; display: inline-block;
+            transition: background 0.05s, box-shadow 0.05s;
+        }
+        .rx-dot.active { background: #22c55e !important; box-shadow: 0 0 8px #22c55e !important; }
+        .peak-text { color: #38bdf8; font-weight: bold; }
+
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* L'AVÝ PANEL - HAPTICKÁ DOSKA */
+        .board-viewport {
+            flex: 6; padding: 15px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .board-container {
+            width: 100%; max-width: 550px; aspect-ratio: 1/1;
+            background-color: #f8fafc; border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            position: relative; border: 4px solid #cbd5e1;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .board-header-bar {
+            height: 34px; background: #e2e8f0; border-bottom: 2px solid #cbd5e1;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; font-weight: bold; color: #334155; font-size: 0.85rem;
+        }
+        .board-svg { width: 100%; height: 100%; flex: 1; display: block; }
+        
+        .slot-shape {
+            fill: rgba(59, 130, 246, 0.08); stroke: #3b82f6; stroke-width: 2.2; stroke-dasharray: 4,2;
+            cursor: pointer; transition: 0.25s ease;
+        }
+        .slot-shape:hover { fill: rgba(59, 130, 246, 0.18); stroke-width: 3.0; }
+        .slot-shape.active {
+            fill: rgba(34, 197, 94, 0.35) !important;
+            stroke: #16a34a !important; stroke-width: 4.2 !important; stroke-dasharray: none;
+            filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.8));
+        }
+
+        /* SENZOROVÁ VRSTVA (Predvolene skrytá pre čisté demo) */
+        .sensor-layer { display: none; }
+        body.show-sensors .sensor-layer { display: inline !important; }
+
+        .sensor-dimple { fill: #64748b; stroke: #0f172a; stroke-width: 0.8; transition: fill 0.1s; }
+        .sensor-dimple.hot-north { fill: #ef4444 !important; stroke: #b91c1c; }
+        .sensor-dimple.hot-south { fill: #3b82f6 !important; stroke: #1d4ed8; }
+        .sensor-label { font-size: 2.6px; font-family: monospace; fill: #1e293b; text-anchor: middle; font-weight: 900; }
+        .slot-title { font-size: 3.6px; font-family: sans-serif; fill: #1e40af; font-weight: bold; text-anchor: middle; pointer-events: none; }
+
+        /* PRAVÝ PANEL - DIDAKTIKA */
+        .didactic-sidebar {
+            flex: 4; background-color: var(--bg-card); border-left: 2px solid #334155;
+            padding: 24px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;
+        }
+        .story-card {
+            background-color: #0f172a; border-radius: 14px; padding: 22px;
+            border-left: 6px solid var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .story-badge {
+            display: inline-block; background: #1e3a8a; color: #93c5fd; font-size: 0.8rem;
+            font-weight: bold; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px;
+        }
+        .story-header { font-size: 1.4rem; font-weight: bold; color: #fbbf24; margin-bottom: 10px; }
+        .story-text { font-size: 1.05rem; line-height: 1.6; color: #f8fafc; }
+        
+        .feedback-banner {
+            margin-top: 18px; padding: 14px; border-radius: 10px; font-weight: bold;
+            font-size: 1.05rem; display: none; text-align: center;
+        }
+        .feedback-banner.show { display: block; animation: popIn 0.25s ease-out; }
+        .feedback-banner.ok { background: #064e3b; color: #6ee7b7; border: 2px solid #10b981; }
+
+        .figure-legend {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px;
+        }
+        .legend-item {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px;
+            display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.92rem; color: #94a3b8;
+            cursor: pointer; transition: 0.2s;
+        }
+        .legend-item:hover { border-color: #60a5fa; color: #f8fafc; }
+        .legend-item.lit { border-color: #10b981; background: #064e3b; color: #6ee7b7; }
+
+        /* SKRYTÝ SERVISNÝ PANEL PRE NFC */
+        .service-drawer {
+            background: #0f172a; border: 1px solid #0d9488; border-radius: 10px; padding: 12px;
+            margin-top: 15px; display: none;
+        }
+        .service-drawer.open { display: block; }
+        .drawer-row { display: flex; gap: 8px; margin-top: 8px; }
+        .drawer-input {
+            flex: 1; background: #1e293b; border: 1px solid #475569; color: white;
+            padding: 6px 10px; border-radius: 5px; font-family: monospace; font-size: 0.85rem;
+        }
+
+        .footer-note {
+            background: #1e1b4b; border: 1px solid #4f46e5; border-radius: 10px; padding: 12px;
+            font-size: 0.84rem; color: #c7d2fe; line-height: 1.4; margin-top: 15px;
+        }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>HaptAI MagneGrid: Hmatové Hniezda</h1>
+            <span id="status-pill">Stav: Odpojené</span>
+        </div>
+        <div class="header-tools">
+            <button id="btn-bt" class="btn btn-bt" onclick="toggleBluetooth()">🔵 Bluetooth</button>
+            <button id="btn-usb" class="btn btn-usb" onclick="toggleUSB()">🔌 USB Kábel</button>
+            <button class="btn btn-stop" onclick="stopAllDemo()" title="Zastaviť zvuky a zhasnúť dosku">⏹️ STOP / Ticho</button>
+            <button id="btn-game" class="btn btn-game-mode" onclick="toggleGameMode()">🎮 Voľný prieskum</button>
+            <button id="btn-serv" class="btn btn-service" onclick="toggleServiceMode()" title="Odkryť diagnostiku a senzory">⚙️ Servis</button>
+        </div>
+    </header>
+
+    <!-- DIAGNOSTICKÁ LIŠTA (Viditeľná iba v servisnom režime) -->
+    <div id="serviceBar" class="service-bar">
+        <div class="telemetry-group">
+            <span><div id="rx-dot" class="rx-dot"></div> <b id="rx-hz">0 Hz</b></span>
+            <span>|</span>
+            <span id="peak-sensor" class="peak-text">Max: ---</span>
+            <span>|</span>
+            <span id="nfc-tag-info" style="color:#5eead4;">NFC: Pripravené</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+            <button id="btn-toggle-sensors" class="btn" style="background:#334155; padding:4px 10px; font-size:0.75rem;" onclick="toggleSensorsManual()">👁️ Senzory: Zobraziť</button>
+            <button class="btn btn-cal" style="padding:4px 10px; font-size:0.75rem;" onclick="tareSensors()">🎯 Nulovať (Tara)</button>
+            <button class="btn btn-nfc" style="padding:4px 10px; font-size:0.75rem;" onclick="toggleNFCDrawer()">💳 NFC Nástroje</button>
+            <button class="btn" style="background:#4338ca; padding:4px 10px; font-size:0.75rem;" onclick="sendPicoStart()">⚡ Reštart Pico</button>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <!-- ĽAVÝ PANEL -->
+        <div class="board-viewport">
+            <div class="board-container">
+                <div class="board-header-bar">
+                    <span id="board-title-label">INKLUZÍVNA ŠABLÓNA: DOSKA 1-1</span>
+                    <span>Formát A5 (150 × 150 mm)</span>
+                </div>
+
+                <svg class="board-svg" viewBox="0 0 150 150">
+                    <rect x="0" y="0" width="150" height="150" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                    <rect x="20" y="20" width="110" height="90" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"/>
+
+                    <!-- ČISTÁ PREZENTAČNÁ VRSTVA: Hniezda -->
+                    <rect id="slot-lampa" class="slot-shape" x="24" y="20" width="38" height="38" rx="2" onclick="manualSim('lampa')"/>
+                    <polygon id="slot-dieta" class="slot-shape" points="75,45 105,25 120,40 108,62" onclick="manualSim('dieta')"/>
+                    <polygon id="slot-hrncek" class="slot-shape" points="48,60 76,68 66,98 34,95 24,72" onclick="manualSim('hrncek')"/>
+                    <circle id="slot-medvedik" class="slot-shape" cx="106" cy="85" r="16" onclick="manualSim('medvedik')"/>
+
+                    <text x="43" y="27" class="slot-title">💡 LAMPA</text>
+                    <text x="100" y="32" class="slot-title">👶 DIEŤA</text>
+                    <text x="50" y="70" class="slot-title">☕ HRNČEK</text>
+                    <text x="106" y="86" class="slot-title">🧸 MEDVEDÍK</text>
+
+                    <!-- TECHNICKÁ SENZOROVÁ VRSTVA (Skrytá v prezentačnom režime) -->
+                    <g id="sensor-layer" class="sensor-layer">
+                        <rect x="112" y="44" width="16" height="42" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                        <text x="120" y="66" font-size="2.8" fill="#64748b" text-anchor="middle" font-family="monospace" transform="rotate(-90 120 66)">MUX CD74HC4067</text>
+
+                        <circle id="sd-0" class="sensor-dimple" cx="33" cy="28.6" r="2.8"/><circle id="sd-1" class="sensor-dimple" cx="58" cy="28.6" r="2.8"/><circle id="sd-2" class="sensor-dimple" cx="83" cy="28.6" r="2.8"/><circle id="sd-3" class="sensor-dimple" cx="108" cy="28.6" r="2.8"/>
+                        <circle id="sd-4" class="sensor-dimple" cx="45.5" cy="50.25" r="2.8"/><circle id="sd-5" class="sensor-dimple" cx="70.5" cy="50.25" r="2.8"/><circle id="sd-6" class="sensor-dimple" cx="95.5" cy="50.25" r="2.8"/><circle id="sd-7" class="sensor-dimple" cx="120.5" cy="50.25" r="2.8"/>
+                        <circle id="sd-8" class="sensor-dimple" cx="33" cy="71.9" r="2.8"/><circle id="sd-9" class="sensor-dimple" cx="58" cy="71.9" r="2.8"/><circle id="sd-10" class="sensor-dimple" cx="83" cy="71.9" r="2.8"/><circle id="sd-11" class="sensor-dimple" cx="108" cy="71.9" r="2.8"/>
+                        <circle id="sd-12" class="sensor-dimple" cx="45.5" cy="93.55" r="2.8"/><circle id="sd-13" class="sensor-dimple" cx="70.5" cy="93.55" r="2.8"/><circle id="sd-14" class="sensor-dimple" cx="95.5" cy="93.55" r="2.8"/><circle id="sd-15" class="sensor-dimple" cx="120.5" cy="93.55" r="2.8"/>
+
+                        <text x="33" y="33.5" class="sensor-label">S0</text><text x="58" y="33.5" class="sensor-label">S1</text><text x="83" y="33.5" class="sensor-label">S2</text><text x="108" y="33.5" class="sensor-label">S3</text>
+                        <text x="45.5" y="55" class="sensor-label">S4</text><text x="70.5" y="55" class="sensor-label">S5</text><text x="95.5" y="55" class="sensor-label">S6</text><text x="120.5" y="55" class="sensor-label">S7</text>
+                        <text x="33" y="76.8" class="sensor-label">S8</text><text x="58" y="76.8" class="sensor-label">S9</text><text x="83" y="76.8" class="sensor-label">S10</text><text x="108" y="76.8" class="sensor-label">S11</text>
+                        <text x="45.5" y="98.5" class="sensor-label">S12</text><text x="70.5" y="98.5" class="sensor-label">S13</text><text x="95.5" y="98.5" class="sensor-label">S14</text><text x="120.5" y="98.5" class="sensor-label">S15</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- PRAVÝ PANEL -->
+        <div class="didactic-sidebar">
+            <div>
+                <div class="story-card">
+                    <span class="story-badge" id="storyBadge">VOĽNÝ PRIESKUM • HMAT &amp; ZVUK</span>
+                    <div class="story-header" id="storyTitle">Objavujte tvary dotykom</div>
+                    <div class="story-text" id="storyPrompt">
+                        Položte na dosku ľubovoľnú figúrku. Každý tvar má svoj vlastný zvuk a miesto v príbehu.
+                    </div>
+                    <div id="storyFeedback" class="feedback-banner"></div>
+                </div>
+
+                <div class="figure-legend">
+                    <div id="leg-lampa" class="legend-item" onclick="manualSim('lampa')">💡 Štvorec – Lampa</div>
+                    <div id="leg-dieta" class="legend-item" onclick="manualSim('dieta')">👶 Lichobežník – Dieťa</div>
+                    <div id="leg-hrncek" class="legend-item" onclick="manualSim('hrncek')">☕ Päťuholník – Hrnček</div>
+                    <div id="leg-medvedik" class="legend-item" onclick="manualSim('medvedik')">🧸 Kruh – Medvedík</div>
+                </div>
+
+                <div id="nfcDrawer" class="service-drawer">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold; color:#5eead4;">
+                        <span>💳 NFC Programátor (PN532)</span>
+                        <span id="nfcDrawerStatus">Pripravené</span>
+                    </div>
+                    <div class="drawer-row">
+                        <button class="btn btn-nfc" style="flex:1; justify-content:center;" onclick="readNFC()">🔍 Prečítať priložený tag</button>
+                    </div>
+                    <div class="drawer-row">
+                        <input type="text" id="nfcWriteTxt" class="drawer-input" maxlength="16" placeholder="Napr. DOSKA_1" value="DOSKA_1-1">
+                        <button class="btn btn-cal" onclick="writeNFC()">✍️ Zapísať</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                <b>Trnka n.o. • Projekt HaptAI / 3D Komenský</b><br>
+                Inkluzívne vzdelávanie: prepájanie hmatu a zvuku pre vidiace aj nevidiace deti.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null, activeOsc = null, activeGain = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            initAudio();
+            stopAudioOnly();
+
+            const now = audioCtx.currentTime;
+            activeOsc = audioCtx.createOscillator();
+            activeGain = audioCtx.createGain();
+            activeOsc.connect(activeGain);
+            activeGain.connect(audioCtx.destination);
+
+            if (type === 'hrncek') {
+                activeOsc.type = 'sine'; activeOsc.frequency.setValueAtTime(880, now);
+                activeOsc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+                activeGain.gain.setValueAtTime(0.3, now); activeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                activeOsc.start(now); activeOsc.stop(now + 0.35);
+            } else if (type === 'medvedik') {
+                activeOsc.type = 'triangle'; activeOsc.frequency.setValueAtTime(130, now);
+                activeOsc.frequency.linearRampToValueAtTime(210, now + 0.12);
+                activeOsc.frequency.linearRampToValueAtTime(150, now + 0.28);
+                activeGain.gain.setValueAtTime(0.4, now); activeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                activeOsc.start(now); activeOsc.stop(now + 0.35);
+            } else if (type === 'dieta') {
+                activeOsc.type = 'sine'; activeOsc.frequency.setValueAtTime(523.25, now);
+                activeOsc.frequency.setValueAtTime(659.25, now + 0.09);
+                activeOsc.frequency.setValueAtTime(783.99, now + 0.18);
+                activeGain.gain.setValueAtTime(0.3, now); activeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                activeOsc.start(now); activeOsc.stop(now + 0.4);
+            } else if (type === 'lampa') {
+                activeOsc.type = 'square'; activeOsc.frequency.setValueAtTime(350, now);
+                activeGain.gain.setValueAtTime(0.25, now); activeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                activeOsc.start(now); activeOsc.stop(now + 0.09);
+            }
+        }
+
+        function stopAudioOnly() {
+            if (activeOsc) {
+                try { activeOsc.stop(); activeOsc.disconnect(); } catch(e) {}
+                activeOsc = null;
+            }
+        }
+
+        function speak(text) {
+            try {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'sk-SK';
+                window.speechSynthesis.speak(u);
+            } catch(e) {}
+        }
+
+        function stopAllDemo() {
+            window.speechSynthesis.cancel();
+            stopAudioOnly();
+            clearSlots();
+            lastActiveFig = null;
+            isLocked = false;
+            const fb = document.getElementById('storyFeedback');
+            if (fb) fb.className = 'feedback-banner';
+            document.getElementById('status-pill').innerText = (port || isBleConnected) ? "Stav: Ticho / Pokoj" : "Stav: Odpojené";
+        }
+
+        const figConfig = {
+            'hrncek': {
+                name: '☕ Hrnček na teplý čaj',
+                stepTitle: 'Krok 1 / 4: Hrnček na teplý čaj',
+                prompt: '„Dobré ráno! Nájdi nádobku na teplý čaj. Spočítaj 5 rohov na podstavci a vlož hrnček vľavo dole.“',
+                succ: 'Výborne! Hrnček s čajom má päť rohov a sedí na mieste.'
+            },
+            'medvedik': {
+                name: '🧸 Verný medvedík',
+                stepTitle: 'Krok 2 / 4: Verný medvedík',
+                prompt: '„Pozri, kto na nás čaká na koberci! Má hladký guľatý podstavec bez rohov. Kam patrí medvedík?“',
+                succ: 'Brum-brum! Medvedík s okrúhlym podstavcom je vo svojom pelechu.'
+            },
+            'dieta': {
+                name: '👶 Kamarát na hranie',
+                stepTitle: 'Krok 3 / 4: Kamarát na hranie',
+                prompt: '„Pridáva sa k nám kamarát. Jeho podstavec má štyri strany, no jedna je šikmá ako šmýkačka. Kde má miesto?“',
+                succ: 'Ahoj! Kamarát sa už teší na spoločnú hru.'
+            },
+            'lampa': {
+                name: '💡 Nočná lampa',
+                stepTitle: 'Krok 4 / 4: Večerná lampa',
+                prompt: '„Vonku je tma. Rozsvieť lampu so štyrmi rovnakými rohmi na nočnom stolíku vľavo hore!“',
+                succ: 'Klik! Štvorcová lampa svieti a osvetľuje celú izbičku.'
+            }
+        };
+
+        const stepOrder = ['hrncek', 'medvedik', 'dieta', 'lampa'];
+        let isStoryMode = false;
+        let curStepIdx = 0;
+        let lastActiveFig = null;
+        let isLocked = false;
+
+        function toggleGameMode() {
+            isStoryMode = !isStoryMode;
+            const btn = document.getElementById('btn-game');
+            const badge = document.getElementById('storyBadge');
+            stopAllDemo();
+
+            if (isStoryMode) {
+                curStepIdx = 0;
+                btn.innerText = '📖 Príbeh (1-4)';
+                badge.innerText = 'METODICKÁ HRA • KROK ZA KROKOM';
+                loadStoryStep();
+            } else {
+                btn.innerText = '🎮 Voľný prieskum';
+                badge.innerText = 'VOĽNÝ PRIESKUM • HMAT & ZVUK';
+                document.getElementById('storyTitle').innerText = 'Objavujte tvary dotykom';
+                document.getElementById('storyPrompt').innerText = 'Položte na dosku ľubovoľnú figúrku. Každý tvar má svoj vlastný zvuk a miesto v príbehu.';
+                speak('Voľný prieskum aktivovaný.');
+            }
+        }
+
+        function loadStoryStep() {
+            const key = stepOrder[curStepIdx];
+            const cfg = figConfig[key];
+            document.getElementById('storyTitle').innerText = cfg.stepTitle;
+            document.getElementById('storyPrompt').innerText = cfg.prompt;
+            speak(cfg.prompt);
+        }
+
+        function triggerSuccess(figId) {
+            if (isLocked || lastActiveFig === figId) return;
+            if (isStoryMode && figId !== stepOrder[curStepIdx]) return;
+
+            isLocked = true;
+            lastActiveFig = figId;
+
+            if (!isStoryMode) clearSlots();
+            const el = document.getElementById('slot-' + figId);
+            if (el) el.classList.add('active');
+            const leg = document.getElementById('leg-' + figId);
+            if (leg) leg.classList.add('lit');
+
+            playSound(figId);
+
+            const cfg = figConfig[figId];
+            if (!isStoryMode) document.getElementById('storyTitle').innerText = cfg.name;
+            const fb = document.getElementById('storyFeedback');
+            fb.className = 'feedback-banner show ok';
+            fb.innerText = cfg.succ;
+            speak(cfg.succ);
+
+            if (isStoryMode) {
+                setTimeout(() => {
+                    isLocked = false;
+                    fb.className = 'feedback-banner';
+                    curStepIdx = (curStepIdx + 1) % stepOrder.length;
+                    if (curStepIdx === 0) clearSlots();
+                    loadStoryStep();
+                }, 3200);
+            } else {
+                setTimeout(() => { isLocked = false; }, 1200);
+            }
+        }
+
+        function clearSlots() {
+            document.querySelectorAll('.slot-shape').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('lit'));
+        }
+
+        let sensorsExplicitlyVisible = false;
+
+        function toggleServiceMode() {
+            const bar = document.getElementById('serviceBar');
+            const btn = document.getElementById('btn-serv');
+            const isActive = bar.classList.toggle('visible');
+            btn.classList.toggle('active');
+
+            if (isActive && sensorsExplicitlyVisible) {
+                document.body.classList.add('show-sensors');
+            } else if (!isActive) {
+                document.body.classList.remove('show-sensors');
+            }
+        }
+
+        function toggleSensorsManual() {
+            sensorsExplicitlyVisible = !sensorsExplicitlyVisible;
+            const btn = document.getElementById('btn-toggle-sensors');
+            if (sensorsExplicitlyVisible) {
+                document.body.classList.add('show-sensors');
+                btn.innerText = '👁️ Senzory: Skryť';
+            } else {
+                document.body.classList.remove('show-sensors');
+                btn.innerText = '👁️ Senzory: Zobraziť';
+            }
+        }
+
+        function toggleNFCDrawer() {
+            document.getElementById('nfcDrawer').classList.toggle('open');
+        }
+
+        // ==============================================================================
+        // DUÁLNA KOMUNIKÁCIA: WEB BLUETOOTH (BLE) + WEB SERIAL (USB)
+        // ==============================================================================
+        let port = null, activeReader = null, isRunningUsb = false;
+        let packetCount = 0, lastPacketTime = performance.now();
+        let dynamicOffsetsMV = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let currentPicoMV = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+
+        const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const NUS_RX_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+        const NUS_TX_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+
+        let bleDevice = null, bleServer = null, bleTxChar = null, bleRxChar = null;
+        let isBleConnected = false;
+        let bleBuffer = "";
+
+        async function toggleBluetooth() {
+            const btn = document.getElementById('btn-bt');
+            const pill = document.getElementById('status-pill');
+
+            if (isBleConnected) {
+                disconnectBluetooth();
+                return;
+            }
+
+            if (!navigator.bluetooth) {
+                alert("Web Bluetooth nie je v tomto prehliadači dostupný.\nUistite sa, že ste v prehliadači Chrome na adrese začínajúcej https://");
+                return;
+            }
+
+            try {
+                initAudio();
+                pill.innerText = "Stav: Vyhľadávam MagneGrid-Pico...";
+
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [NUS_SERVICE_UUID]
+                });
+
+                bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
+
+                pill.innerText = "Stav: Pripájam Bluetooth...";
+                bleServer = await bleDevice.gatt.connect();
+                const service = await bleServer.getPrimaryService(NUS_SERVICE_UUID);
+
+                bleTxChar = await service.getCharacteristic(NUS_TX_UUID);
+                bleRxChar = await service.getCharacteristic(NUS_RX_UUID);
+
+                await bleTxChar.startNotifications();
+                bleTxChar.addEventListener('characteristicvaluechanged', handleBleNotification);
+
+                isBleConnected = true;
+                btn.innerText = "🔴 Odpojiť BT";
+                btn.className = "btn btn-connected";
+                pill.innerText = "Stav: BT Pripojené (" + (bleDevice.name || "Pico") + ")";
+                speak("Bluetooth pripojené.");
+            } catch (err) {
+                pill.innerText = "Stav: Odpojené";
+                btn.innerText = "🔵 Bluetooth";
+                btn.className = "btn btn-bt";
+                if (err.name !== 'NotFoundError') alert("Chyba Bluetooth pripojenia: " + err.message);
+            }
+        }
+
+        function onBleDisconnected() {
+            isBleConnected = false;
+            bleServer = null; bleTxChar = null; bleRxChar = null;
+            const btn = document.getElementById('btn-bt');
+            if (btn) { btn.innerText = "🔵 Bluetooth"; btn.className = "btn btn-bt"; }
+            document.getElementById('status-pill').innerText = "Stav: BT Odpojené";
+            document.getElementById('rx-dot').classList.remove('active');
+            document.getElementById('rx-hz').innerText = "0 Hz";
+            document.getElementById('peak-sensor').innerText = "Max: ---";
+        }
+
+        function disconnectBluetooth() {
+            if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+            onBleDisconnected();
+        }
+
+        function handleBleNotification(event) {
+            const chunk = new TextDecoder().decode(event.target.value);
+            bleBuffer += chunk;
+            let lines = bleBuffer.split('\n');
+            bleBuffer = lines.pop();
+
+            for (let idx = 0; idx < lines.length; idx++) {
+                const tr = lines[idx].trim();
+                if (tr.startsWith('{') && tr.endsWith('}')) {
+                    packetCount++;
+                    flashRxIndicator();
+                    try { parseJsonPacket(JSON.parse(tr)); } catch(e) {}
+                }
+            }
+        }
+
+        async function toggleUSB() {
+            const btn = document.getElementById('btn-usb');
+            const pill = document.getElementById('status-pill');
+
+            if (port) {
+                isRunningUsb = false;
+                if (activeReader) { try { await activeReader.cancel(); } catch(e) {} }
+                setTimeout(async () => {
+                    try { if (port) await port.close(); } catch(e) {}
+                    port = null; activeReader = null;
+                    btn.innerText = "🔌 USB Kábel"; btn.className = "btn btn-usb";
+                    pill.innerText = "Stav: USB Odpojené";
+                    document.getElementById('rx-dot').classList.remove('active');
+                    document.getElementById('rx-hz').innerText = "0 Hz";
+                    document.getElementById('peak-sensor').innerText = "Max: ---";
+                }, 120);
+            } else {
+                if (!navigator.serial) {
+                    alert("Pripojenie cez USB kábel podporuje iba Chrome na PC.\nNa tablete kliknite na modré tlačidlo 🔵 Bluetooth.");
+                    return;
+                }
+                try {
+                    port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 115200 });
+                    try { await port.setSignals({ dataTerminalReady: true, requestToSend: true }); } catch(e) {}
+
+                    isRunningUsb = true;
+                    btn.innerText = "🔴 Odpojiť USB"; btn.className = "btn btn-connected";
+                    pill.innerText = "Stav: USB Pripojené";
+
+                    initAudio();
+                    readUsbLoop();
+
+                    setTimeout(() => { if (packetCount === 0) sendPicoStart(); }, 400);
+                } catch (err) {
+                    btn.innerText = "🔌 USB Kábel"; btn.className = "btn btn-usb";
+                }
+            }
+        }
+
+        async function readUsbLoop() {
+            const decoder = new TextDecoder();
+            let buf = "";
+
+            try {
+                while (port && port.readable && isRunningUsb) {
+                    activeReader = port.readable.getReader();
+                    try {
+                        while (isRunningUsb) {
+                            const res = await activeReader.read();
+                            if (res.done) break;
+
+                            flashRxIndicator();
+                            buf += decoder.decode(res.value, { stream: true });
+                            let lines = buf.split('\n');
+                            buf = lines.pop();
+
+                            for (let idx = 0; idx < lines.length; idx++) {
+                                const tr = lines[idx].trim();
+                                if (tr.startsWith('{') && tr.endsWith('}')) {
+                                    packetCount++;
+                                    try { parseJsonPacket(JSON.parse(tr)); } catch(e) {}
+                                }
+                            }
+                        }
+                    } finally {
+                        activeReader.releaseLock();
+                        activeReader = null;
+                    }
+                }
+            } catch (err) {}
+        }
+
+        function flashRxIndicator() {
+            const rxDot = document.getElementById('rx-dot');
+            if (rxDot) {
+                rxDot.classList.add('active');
+                setTimeout(() => rxDot.classList.remove('active'), 40);
+            }
+        }
+
+        function parseJsonPacket(d) {
+            if (d.nfc_msg) {
+                document.getElementById('nfc-tag-info').innerText = "NFC: " + d.nfc_msg;
+                document.getElementById('nfcDrawerStatus').innerText = "Výsledok: " + d.nfc_msg;
+                document.getElementById('board-title-label').innerText = "ŠABLÓNA: " + d.nfc_msg;
+                speak("NFC štítok: " + d.nfc_msg);
+            } else {
+                renderData(d);
+            }
+        }
+
+        async function sendSerialCmd(cmd) {
+            const cmdPayload = cmd + "\n";
+            if (isBleConnected && bleRxChar) {
+                try {
+                    const data = new TextEncoder().encode(cmdPayload);
+                    if (bleRxChar.writeValueWithResponse) {
+                        await bleRxChar.writeValueWithResponse(data);
+                    } else {
+                        await bleRxChar.writeValue(data);
+                    }
+                    return;
+                } catch(e) {}
+            }
+
+            if (port && port.writable) {
+                let writer = null;
+                try {
+                    writer = port.writable.getWriter();
+                    await writer.write(new TextEncoder().encode(cmdPayload));
+                } catch (err) {
+                } finally {
+                    if (writer) { try { writer.releaseLock(); } catch(e) {} }
+                }
+                return;
+            }
+
+            alert("Najprv pripojte zariadenie cez tlačidlo 🔵 Bluetooth alebo 🔌 USB Kábel.");
+        }
+
+        function tareSensors() {
+            for (let i = 0; i < 16; i++) dynamicOffsetsMV[i] = currentPicoMV[i];
+            sendSerialCmd("CAL");
+            speak("Senzory vynulované.");
+            clearSlots();
+            lastActiveFig = null;
+        }
+
+        function readNFC() {
+            document.getElementById('nfcDrawerStatus').innerText = "Hľadám tag...";
+            document.getElementById('nfc-tag-info').innerText = "NFC: Čítam...";
+            sendSerialCmd("NFC");
+        }
+
+        function writeNFC() {
+            const val = document.getElementById('nfcWriteTxt').value.trim();
+            if (!val) return;
+            document.getElementById('nfcDrawerStatus').innerText = "Priložte tag...";
+            document.getElementById('nfc-tag-info').innerText = "NFC: Zapisujem...";
+            sendSerialCmd("WRITE:" + val);
+        }
+
+        async function sendPicoStart() {
+            if (port && port.writable) {
+                let writer = null;
+                try {
+                    writer = port.writable.getWriter();
+                    await writer.write(new Uint8Array([4]));
+                } catch(e) {
+                } finally {
+                    if (writer) { try { writer.releaseLock(); } catch(e) {} }
+                }
+                speak("Reštartujem Pico.");
+            }
+        }
+
+        const ACTIVE_THRESHOLD_MV = 16;
+
+        function renderData(data) {
+            const now = performance.now();
+            if (now - lastPacketTime >= 1000) {
+                document.getElementById('rx-hz').innerText = packetCount + ' Hz';
+                packetCount = 0;
+                lastPacketTime = now;
+            }
+
+            let maxAbs = 0, maxSensor = -1, maxSigned = 0;
+            const deltas_mv = data.deltas_mv;
+
+            for (let i = 0; i < 16; i++) {
+                let p_mv = 0;
+                if (deltas_mv && deltas_mv[i] !== undefined) {
+                    p_mv = deltas_mv[i];
+                } else if (data.deltas && data.deltas[i] !== undefined) {
+                    p_mv = Math.abs(data.deltas[i]) < 5.0 ? Math.round(data.deltas[i] * 1000) : Math.round(data.deltas[i]);
+                } else if (data['s' + i] !== undefined) {
+                    p_mv = Math.abs(data['s' + i]) < 5.0 ? Math.round(data['s' + i] * 1000) : Math.round(data['s' + i]);
+                }
+
+                currentPicoMV[i] = p_mv;
+                let net_mv = p_mv - dynamicOffsetsMV[i];
+                const abs_mv = Math.abs(net_mv);
+
+                if (abs_mv > maxAbs) {
+                    maxAbs = abs_mv;
+                    maxSensor = i;
+                    maxSigned = net_mv;
+                }
+
+                const dimpleEl = document.getElementById('sd-' + i);
+                if (dimpleEl) {
+                    dimpleEl.className = 'sensor-dimple';
+                    if (abs_mv >= ACTIVE_THRESHOLD_MV) {
+                        dimpleEl.classList.add(net_mv >= 0 ? 'hot-north' : 'hot-south');
+                    }
+                }
+            }
+
+            const peakEl = document.getElementById('peak-sensor');
+            if (maxSensor >= 0 && maxAbs > 0) {
+                peakEl.innerText = `Max: S${maxSensor} (${maxSigned >= 0 ? '+' : ''}${maxSigned} mV)`;
+            } else {
+                peakEl.innerText = "Max: 0 mV (Kľud)";
+            }
+
+            if (maxAbs >= ACTIVE_THRESHOLD_MV) {
+                if ([1, 4, 0, 5, 8].indexOf(maxSensor) !== -1) triggerSuccess('lampa');
+                else if ([13, 9, 12].indexOf(maxSensor) !== -1) triggerSuccess('hrncek');
+                else if ([7, 3, 6, 2].indexOf(maxSensor) !== -1) triggerSuccess('dieta');
+                else if ([15, 11, 14, 10].indexOf(maxSensor) !== -1) triggerSuccess('medvedik');
+            } else {
+                if (!isStoryMode) clearSlots();
+                lastActiveFig = null;
+            }
+        }
+
+        function manualSim(figId) {
+            triggerSuccess(figId);
+        }
+    </script>
+</body>
+</html>
