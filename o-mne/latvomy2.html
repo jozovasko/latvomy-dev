@@ -12,6 +12,8 @@
       --container-bg: #ffffff;
       --border-color: #e0e0e0;
       --accent-gold: #d97706;
+      --accent-purple: #8e44ad;
+      --accent-green: #27ae60;
       --warn-bg: rgba(231, 76, 60, 0.08);
       --warn-border: #e74c3c;
     }
@@ -279,6 +281,62 @@
       font-weight: 600;
     }
 
+    /* KARTA DOTAZNÍKA */
+    .feedback-card {
+      background: var(--bg-color);
+      border: 2px solid var(--link-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 30px 0;
+    }
+    .feedback-card h3 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feedback-intro {
+      font-style: italic;
+      color: #64748b;
+      margin-bottom: 16px;
+      font-size: 0.92em;
+      line-height: 1.5;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9em;
+      margin-bottom: 6px;
+      color: var(--text-color);
+    }
+    .form-group textarea, .form-group input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      background: var(--container-bg);
+      color: var(--text-color);
+      font-family: inherit;
+      font-size: 0.9em;
+      resize: vertical;
+    }
+    .form-group textarea:focus, .form-group input[type="text"]:focus {
+      outline: none;
+      border-color: var(--link-color);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+    .feedback-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
     .sources-box {
       background: var(--bg-color);
       border: 1px solid var(--border-color);
@@ -316,7 +374,7 @@
     <div class="controls">
       <button class="btn" id="ui-btn-surface" onclick="resetToSurface()">🏠 Povrch</button>
       
-      <!-- JAZYKOVÉ MENU SO ZEMEGULOU -->
+      <!-- JAZYKOVÉ MENU -->
       <div class="lang-dropdown">
         <button class="btn" id="ui-btn-lang" aria-label="Jazyk">🌐 <span id="current-lang-code">SK</span> ▾</button>
         <div class="lang-menu">
@@ -387,22 +445,25 @@
        =================================================================== -->
   <article id="art-sk" class="lang-article active">
     <section>
-      <h2>Úroveň 1: Prečo to robíme – Samsarický cyklus a rodová pamäť</h2>
+      <h2>Úroveň 1: List predkom a odkaz budúcim generáciám</h2>
       <p>
-        V kánone LATVOMY2 neuvažujeme v uzavretej lineárnej priamke. Riadiacim princípom tvorby a učenia je <strong>samsarický cyklus poznania</strong>:
+        Tento priestor nie je obyčajnou webovou stránkou. Je to <strong>list mojim predkom a trvalé posolstvo rodine, priateľom a spolutvorcom</strong> – tichý maják, ktorý tu zostane ako inšpirácia, aj keď ja sám už nebudem prítomný fyzicky.
+      </p>
+      <p>
+        V kánone LATVOMY2 neuvažujeme v uzavretej lineárnej priamke. Riadiacim princípom tvorby, remesla a učenia je <strong>samsarický cyklus poznania</strong>:
       </p>
       <div class="formula-badge">
         PREČO (Láska, 300) &xrarr; ČO (Myslenie, 200) &xrarr; AKO (Tvorivosť, 100) &xrarr; Návrat na PREČO (300)
       </div>
       <p>
-        Zmysel a etika (PREČO) sa pretavujú do presných zmlúv a didaktických scenárov (ČO), ktoré v dielni narážajú na fyzický odpor materiálu a kód (AKO). Hmotná skúsenosť následne spätne vyživuje a preveruje pôvodný zámer, presne ako opadané lístie v komposte vyživuje korene.
+        Zmysel a rodová etika (PREČO) sa pretavujú do konkrétnych didaktických rozhraní (ČO), ktoré v dielni narážajú na fyzický odpor materiálu a skrutiek (AKO). Hmotná skúsenosť následne spätne vyživuje a preveruje pôvodný zámer, presne ako opadané lístie v komposte vyživuje korene stromu.
       </p>
       <ul>
-        <li><strong>Varovanie Yuvala Noaha Harariho (Nexus / Hyde Park ČT):</strong> AI je prvým samostatným aktérom v dejinách. Ak stratíme kontakt s realitou a odovzdáme rozhodovanie algoritmom, staneme sa <strong>„kravami budúcnosti“</strong> – bytosťami na digitálnej pastve, ktoré vôbec nerozumejú finančným a dátovým trhom riadiacim ich osud.</li>
-        <li><strong>Viktor Frankl a analógové ticho ($T_{off} = 30\text{ s}$):</strong> Sloboda človeka leží v priestore medzi podnetom a reakciou. V systéme technicky vymáhame <strong>30-sekundovú Franklovu medzeru ($T_{off}$)</strong> – čas na stíšenie a overenie hypotézy bez dotyku obrazovky.</li>
+        <li><strong>Varovanie Yuvala Noaha Harariho (Nexus):</strong> Umelá inteligencia je prvým samostatným aktérom v dejinách. Ak stratíme kontakt s fyzickou realitou a nekriticky odovzdáme rozhodovanie algoritmom, staneme sa <strong>„kravami budúcnosti“</strong> – bytosťami na digitálnej pastve, ktoré vôbec nerozumejú finančným a dátovým trhom riadiacim ich život.</li>
+        <li><strong>Viktor Frankl a analógové ticho ($T_{off} = 30\text{ s}$):</strong> Sloboda človeka leží v priestore medzi podnetom a reakciou. V našom systéme preto technicky vymáhame <strong>30-sekundovú Franklovu medzeru ($T_{off}$)</strong> – čas na stíšenie a overenie hypotézy bez dotyku displeja.</li>
         <li><strong>Genealogická konvergencia koreňov (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
-          <br>1. <strong>Sedliacka vetva (Milhosť):</strong> Pradedovia a prababičky (Szakács, Cikó, Pataki, Zöld) zbiehajúci sa do matkinej línie. Rováš a truhlica na osivo z roku 1932, z ktorej sa nikdy nesmelo zjesť všetko.
-          <br>2. <strong>Staviteľská olovnica (Streda nad Bodrogom):</strong> Murárski predkovia (Vaskó, Nagy, Rapcsák, Compoly) a otec stavbár-umelec Jozef Vaško (1932), ktorý v roku 1975 navrhol žltú sféru v ochrannej mušli. Murár berie olovnicu, overí zvislicu a stavia klenbu, ktorá nespadne.
+          <br>1. <strong>Sedliacka vetva (Milhosť):</strong> Pradedovia a prababičky (Szakács, Cikó, Pataki, Zöld) zbiehajúci sa do matkinej línie. Rováš so zárezmi a truhlica na osivo z roku 1932, z ktorej sa nikdy nesmelo zjesť všetko, aby rodina prežila neúrodu a zimu.
+          <br>2. <strong>Staviteľská olovnica (Streda nad Bodrogom):</strong> Murárski predkovia (Vaskó, Nagy, Rapcsák, Compoly) a otec stavbár-umelec Jozef Vaško (1932), ktorý v roku 1975 navrhol žltú sféru v ochrannej mušli. Murár nečaká na náhodu: berie olovnicu, overí zvislicu a stavia klenbu, ktorá nespadne.
         </li>
       </ul>
       <div class="quote-box">
@@ -417,7 +478,7 @@
       </p>
       <ul>
         <li><strong>Ternárna logika (Setuň {-1, 0, +1}):</strong>
-          Ruský počítač Setuň z roku 1958 ukázal, že svet nie je binárne čiernobiely:
+          Ruský počítač Setuň z roku 1958 ukázal, že svet nie je binárne čiernobiely. Binárna logika núti ľudí do sporov: <em>„Buď pravda (+1), alebo klam (-1)“</em>. Ternárna logika stavia na rovnovážnom strede:
           <div class="formula-badge">
             {-1: Odpor / Prekážka} &larr;&rarr; {0: Stred / Franklova medzera T_off / DOMOV} &larr;&rarr; {+1: Svetlo / Rast}
           </div>
@@ -427,27 +488,70 @@
           Rastlinná neurobiológia dokazuje, že koreňový vrchol vníma prekážku v predstihu. Nenaráža do skaly čelne, ale obtečie ju po dráhe najmenšieho odporu. Takto konvergujú aj korene nášho rodu ponad historické zlomy do prítomného kmeňa.
         </li>
         <li><strong>Tretí hĺbkový koreň PREČO:</strong>
-          Po vybudovaní koruny okolo dvadsiateho roku života začína do hĺbky rásť kolmý koreň hermeneutiky, ktorý kotví celú stavbu vo filozofii a zmysle.
+          Po vybudovaní koruny okolo dvadsiateho roku života (1979) začína do hĺbky rásť kolmý koreň hermeneutiky a etiky Ahinsá, ktorý kotví celú stavbu v hľadaní zmyslu.
         </li>
       </ul>
     </section>
 
     <section>
-      <h2>Úroveň 3: Čo konkrétne staviame – MagneGrid a pomoc bez spasiteľstva</h2>
+      <h2>Úroveň 3: Čo staviame – UDP pre deti od 3 do 103 rokov</h2>
       <div class="formula-badge">
         Pasca Spasiteľa: Po-moc &xrarr; Moc nad druhým &xrarr; Ne-moc (vyhorenie)
       </div>
       <ul>
+        <li><strong>UDP (Univerzálna Didaktická Pomôcka pre deti od 3 do 103 rokov):</strong>
+          Hmotná doska (150×150 mm s Hallovými senzormi SS49E a tvarovými pukmi) slúži ako hmatový trenažér myslenia. Odtrháva pozornosť od obrazoviek a vracia cit do prstov dieťaťu, dospelému aj seniorovi.
+        </li>
         <li><strong>Paralelná pomoc namiesto poúčania (Kostihoj / Knitbone):</strong>
-          Ak niekomu pomáhame zhora, vytvárame závislosť a sami vyhoríme. Ako Kostihoj aktéri si sadáme za spoločný stôl a medzi seba kladieme dosku MagneGrid (150×150 mm s Hallovými senzormi SS49E).
+          Ak niekomu pomáhame zhora, vytvárame závislosť a sami vyhoríme. Ako Kostihoj aktéri si sadáme za spoločný stôl a medzi seba kladieme dosku UDP.
         </li>
         <li><strong>Hmat ako rovnostár:</strong>
-          Nevidiaci človek alebo dieťa vníma jemným hmatom fyzikálny odpor magnetov skôr než dospelý unavený z obrazoviek. Individuálne obmedzenie uvoľňuje dar, ktorý pomáha celej skupine.
+          Nevidiaci človek alebo malé dieťa vníma jemným hmatom fyzikálny odpor magnetov skôr než dospelý unavený z monitorov. Individuálne obmedzenie uvoľňuje dar, ktorý pomáha celej skupine.
         </li>
         <li><strong>Zvrchovaná domáca strojovňa:</strong>
           Všetky zmluvy bežia na lokálnom serveri bez syntetických príkras a halucinácií (pravidlo <code>allow_synthetic_fill: false</code> na portoch :8085 a :30080).
         </li>
       </ul>
+
+      <!-- INTERAKTÍVNY DOTAZNÍK PRE RODINU A PRIATEĽOV -->
+      <div class="feedback-card" id="dotaznik">
+        <h3>📝 Dotazník pre rodinu, priateľov a spolutvorcov</h3>
+        <p class="feedback-intro">
+          Tento priestor tvoríme spoločne. Budem vďačný za akýkoľvek tvoj postreh, nápad na zjednodušenie pomôcky UDP, alebo myšlienku, ktorú by si rád zanechal v našom rodovom archíve.
+        </p>
+
+        <form id="family-feedback-form" onsubmit="handleFeedbackSubmit(event)">
+          <div class="form-group">
+            <label for="fb-name">Tvoje meno alebo prezývka (a vzťah k rodine/dielu):</label>
+            <input type="text" id="fb-name" placeholder="Napr. Katka (dcéra / vnučka / priateľ zo školy)" required>
+          </div>
+
+          <div class="form-group">
+            <label for="fb-roots">1. Korene a myšlienka (PREČO): Čo ťa v tomto príbehu oslovilo alebo prekvapilo?</label>
+            <textarea id="fb-roots" rows="3" placeholder="Ako vnímaš spojenie pradedovho rováša a olovnice s dnešným svetom?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="fb-udp">2. Pomôcka UDP od 3 do 103 rokov (ČO): Aký tvar puku, hmatový hlavolam či úlohu by si navrhol(a)?</label>
+            <textarea id="fb-udp" rows="3" placeholder="Čo by malo byť také jednoduché, aby to zvládlo dieťa i prababička poslepiačky?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="fb-gift">3. Tvoj jedinečný vklad (AKO): V čom vidíš svoj dar, ktorým by si rád prispel?</label>
+            <textarea id="fb-gift" rows="2" placeholder="Remeslo, drevo, kreslenie, programovanie, písanie, spomienky alebo vľúdne slovo..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="fb-letter">4. Voľný odkaz do rodinného kánonu (Odkaz Jozefovi):</label>
+            <textarea id="fb-letter" rows="3" placeholder="Slová, ktoré tu zostanú ako stopa pre ďalšie generácie..."></textarea>
+          </div>
+
+          <div class="feedback-actions">
+            <button type="submit" class="btn btn-login">✉️ Pripraviť odpoveď do emailu</button>
+            <button type="button" class="btn" onclick="copyFeedbackToClipboard()">📋 Skopírovať text do schránky</button>
+          </div>
+        </form>
+      </div>
 
       <div class="sources-box">
         <h4>Overené pramene pre rodinu a priateľov:</h4>
@@ -466,18 +570,15 @@
        =================================================================== -->
   <article id="art-hu" class="lang-article">
     <section>
-      <h2>1. Szint: Miért csináljuk – A szamszára ciklus és a családi emlékezet</h2>
+      <h2>1. Szint: Levél az ősökhöz és üzenet az eljövendő nemzedékeknek</h2>
       <p>
-        A LATVOMY2 kánonjában a megismerés és alkotás nem egyirányú vonal, hanem egy <strong>örök szamszára-körforgás</strong>:
+        Ez a felület nem csupán egy weboldal. Ez egy <strong>levél az őseimhez, és maradandó üzenet a családomnak, barátaimnak és alkotótársaimnak</strong> – egy csendes világítótorony, amely inspirációként itt marad akkor is, amikor én magam fizikailag már nem leszek jelen.
       </p>
       <div class="formula-badge">
         MIÉRT (Szeretet, 300) &xrarr; MIT (Gondolkodás, 200) &xrarr; HOGYAN (Alkotás, 100) &xrarr; Visszatérés a MIÉRT-hez (300)
       </div>
-      <p>
-        A szándék és az etika (MIÉRT) egzakt szerződésekbe és didaktikai forgatókönyvekbe öltözik (MIT), amelyek a műhelyben találkoznak az anyag és a kód fizikai ellenállásával (HOGYAN). A megélt tapasztalat pedig visszatáplálja a szellemet, mint az aláhullott lomb a talaj gyökereit.
-      </p>
       <ul>
-        <li><strong>Yuval Noah Harari figyelmeztetése (Nexus):</strong> A mesterséges intelligencia a történelem első önálló cselekvője. Ha vakon átadjuk a döntést a képernyőknek, a <strong>„jövő teheneivé”</strong> válunk, békésen legelészve anélkül, hogy értenénk a sorsunkról döntő digitális piacokat.</li>
+        <li><strong>Yuval Noah Harari figyelmeztetése (Nexus):</strong> A mesterséges intelligencia a történelem első önálló cselekvője. Ha elszakadunk a kézzelfogható valóságtól, a <strong>„jövő teheneivé”</strong> válunk, békésen legelészve anélkül, hogy értenénk a sorsunkról döntő algoritmusokat.</li>
         <li><strong>Viktor Frankl és az analóg csend ($T_{off} = 30\text{ s}$):</strong> A szabadság az inger és a válasz közötti térben él. Rendszerünkben tudatosan bevezetjük a <strong>30 másodperces Frankl-rést ($T_{off}$)</strong>, amikor a kéz elengedi a gépet, és a lélek visszanyeri nyugalmát.</li>
         <li><strong>Családi gyökerek összefutása (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
           <br>1. <strong>Földműves ág (Migléc / Milhosť):</strong> Dédnagyszülők (Szakács, Cikó, Pataki, Zöld) és a rovásfa az 1932-es vetőmagos ládával.
@@ -493,32 +594,22 @@
       <h2>2. Szint: Rend a dzsungelben – Háromértékű logika és a mélygyökér</h2>
       <ul>
         <li><strong>Háromértékű logika (Szetuny gép {-1, 0, +1}):</strong>
-          A világ nem fekete-fehér. A Bruszencov-féle kiegyensúlyozott logika a biztos középpontra épít:
-          <div class="formula-badge">
-            {-1: Ellenállás / Szikla} &larr;&rarr; {0: Frankl-rés / Otthon T_off} &larr;&rarr; {+1: Fény / Növekedés}
-          </div>
-          A nulla a stabil <strong>Otthon ($Z = 0$)</strong>.
-        </li>
-        <li><strong>A gyökércsúcs intelligenciája (Baluška, Darwin):</strong>
-          A gyökér vége finom érzékszerv. Nem ütközik makacsul a sziklának, hanem elegánsan kikerüli. Családunk gyökerei is így futnak össze a jelen törzsébe ($Z = 0$).
+          {-1: Ellenállás} &larr;&rarr; {0: Otthon / Frankl-rés T_off} &larr;&rarr; {+1: Fény / Növekedés}. A nulla a stabil <strong>Otthon ($Z = 0$)</strong>.
         </li>
         <li><strong>A harmadik, mélyre hatoló MIÉRT-gyökér:</strong>
-          A húszas években kibomló korona megjelenésével párhuzamosan a fa egy mély, függőleges gyökeret növeszt a talajba, amely a filozófiai értelem szilárd alapját adja.
+          A húszas években kibomló korona megjelenésével párhuzamosan a fa egy függőleges gyökeret növeszt a talajba, amely a filozófiai értelem szilárd alapját adja.
         </li>
       </ul>
     </section>
 
     <section>
-      <h2>3. Szint: A műhely valósága – MagneGrid és mellérendelt segítségnyújtás</h2>
-      <div class="formula-badge">
-        A Megmentő csapdája: Segítség &xrarr; Hatalom a másik felett &xrarr; Tehetetlenség és kiégés
-      </div>
+      <h2>3. Szint: UDP – Egyetemes Didaktikai Eszköz 3-tól 103 éves korig</h2>
       <ul>
-        <li><strong>Mellérendelt segítség (Fekete nadálytő / Knitbone):</strong>
-          Egy asztalhoz ülünk le, és a tapintásos <strong>MagneGrid</strong> táblát helyezzük magunk közé egyenlő felekként.
+        <li><strong>UDP (Egyetemes Didaktikai Eszköz 3-tól 103 éves korig):</strong>
+          Kézzelfogható tábla (150×150 mm mágneses korongokkal), amely a gondolkodás tapintásos edzőtere. Elvonja a figyelmet a képernyőkről, és visszahozza az ujjak finom érzékelését.
         </li>
-        <li><strong>Tapintás mint egyenlőség:</strong>
-          Egy látássérült ember finom ujjaival gyakran gyorsabban érzi a mágneses mezőt, mint a képernyőkhöz szokott felnőttek. Egyéni korlátja ajándékká válik a közösség számára.
+        <li><strong>Mellérendelt segítség (Fekete nadálytő / Knitbone):</strong>
+          Egy közös asztalhoz ülünk le, és az UDP táblát helyezzük magunk közé egyenlő felekként.
         </li>
       </ul>
     </section>
@@ -529,19 +620,16 @@
        =================================================================== -->
   <article id="art-en" class="lang-article">
     <section>
-      <h2>Level 1: Why We Build – The Samsaric Cycle & Ancestral Roots</h2>
+      <h2>Level 1: Letter to Ancestors and Message to Future Generations</h2>
       <p>
-        In the LATVOMY2 canon, creation and cognition are not linear dead ends, but a <strong>cyclical regenerative journey</strong>:
+        This space is not an ordinary website. It is a <strong>letter to my ancestors and an enduring legacy for my family, friends, and co-creators</strong>—a quiet beacon that will remain as inspiration even when I am no longer physically present.
       </p>
       <div class="formula-badge">
         WHY (Love, 300) &xrarr; WHAT (Mind, 200) &xrarr; HOW (Creativity, 100) &xrarr; Return to WHY (300)
       </div>
-      <p>
-        Purpose and ethics (WHY) materialize into contracts and didactic scenarios (WHAT), meeting the physical friction of matter and code (HOW). Experiential resistance in turn enriches and refines the core purpose, as fallen leaves compost back into soil nutrients.
-      </p>
       <ul>
         <li><strong>Yuval Noah Harari's Warning (Nexus):</strong> AI is history's first autonomous agent. Relinquishing critical discernment turns us into the <strong>"cattle of the future"</strong>.</li>
-        <li><strong>Viktor Frankl & Analog Silence ($T_{off} = 30\text{ s}$):</strong> Human freedom lives in the space between stimulus and response. We technically enforce a <strong>30-second Frankl Gap ($T_{off}$)</strong>.</li>
+        <li><strong>Viktor Frankl & Analog Silence ($T_{off} = 30\text{ s}$):</strong> Freedom lives in the space between stimulus and response. We technically enforce a <strong>30-second Frankl Gap ($T_{off}$)</strong>.</li>
         <li><strong>Ancestral Convergence (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
           <br>1. <strong>Peasant Lineage (Milhosť):</strong> Tally stick and the 1932 seed chest preserved through every crisis.
           <br>2. <strong>Builder's Precision (Streda nad Bodrogom):</strong> Stonemason ancestors and father Jozef Vaskó (1932) who drafted the 1975 yellow sphere inside the protective shell.
@@ -550,31 +638,24 @@
     </section>
 
     <section>
-      <h2>Level 2: Ordering the Jungle – Balanced Ternary & Root Wisdom</h2>
+      <h2>Level 2: Ordering the Jungle – Balanced Ternary & Deep Taproot</h2>
       <ul>
-        <li><strong>Balanced Ternary Logic (Setun {-1, 0, +1}):</strong>
-          Overcoming binary polarization through a calm equilibrium point:
-          <div class="formula-badge">
-            {-1: Resistance / Floor} &larr;&rarr; {0: Home / Frankl Gap T_off} &larr;&rarr; {+1: Ascent / Light}
-          </div>
-        </li>
-        <li><strong>Root Apex Wisdom (Baluška, Darwin):</strong>
-          Plant roots sense subterranean stones and gently bypass them.
+        <li><strong>Balanced Ternary (Setun {-1, 0, +1}):</strong>
+          {-1: Resistance} &larr;&rarr; {0: Home / Frankl Gap T_off} &larr;&rarr; {+1: Ascent / Light}.
         </li>
         <li><strong>The Deep Taproot of WHY:</strong>
-          As the canopy branches out in early adulthood, a deep vertical taproot plunges into the subterranean realm, anchoring the whole architecture in purpose.
+          As the canopy branches out in early adulthood, a vertical taproot plunges into the subterranean realm, anchoring the whole architecture in purpose.
         </li>
       </ul>
     </section>
 
     <section>
-      <h2>Level 3: Physical Grounding – MagneGrid & Egalitarian Support</h2>
-      <div class="formula-badge">
-        Savior Trap: Helping &xrarr; Power over the other &xrarr; Burnout & Impotence
-      </div>
+      <h2>Level 3: UDA – Universal Didactic Aid for Learners from 3 to 103</h2>
       <ul>
-        <li><strong>The Knitbone Actor:</strong> We collaborate as equals at a shared table around the tactile <strong>MagneGrid</strong> interface.</li>
-        <li><strong>Touch as an Equalizer:</strong> Visually impaired learners detect magnetic fields with dexterity exceeding screen-fatigued peers.</li>
+        <li><strong>UDA (Universal Didactic Aid for Learners from 3 to 103):</strong>
+          A tactile board (150×150 mm with Hall sensors and magnetic pucks) that redirects attention from glowing screens back to physical reality and touch.
+        </li>
+        <li><strong>The Knitbone Actor:</strong> We collaborate as equals at a shared table around the tactile UDA interface.</li>
       </ul>
     </section>
   </article>
@@ -584,16 +665,13 @@
        =================================================================== -->
   <article id="art-de" class="lang-article">
     <section>
-      <h2>Ebene 1: Das Warum – Der samsarische Zyklus und die Ahnenwurzeln</h2>
+      <h2>Ebene 1: Brief an die Ahnen und Vermächtnis für künftige Generationen</h2>
       <p>
-        Im LATVOMY2-Kanon ist Schöpfung keine lineare Einbahnstraße, sondern ein <strong>samsarischer Kreislauf der Erkenntnis</strong>:
+        Dieser Raum ist keine gewöhnliche Website. Es ist ein <strong>Brief an meine Ahnen und ein bleibendes Vermächtnis für meine Familie, Freunde und Weggefährten</strong> – ein stilles Licht, das auch dann Orientierung schenkt, wenn ich selbst physisch nicht mehr da bin.
       </p>
       <div class="formula-badge">
         WARUM (Liebe, 300) &xrarr; WAS (Denken, 200) &xrarr; WIE (Schöpferkraft, 100) &xrarr; Rückkehr zum WARUM (300)
       </div>
-      <p>
-        Sinn und Ethik (WARUM) gießen sich in didaktische Verträge (WAS) und treffen in der Werkstatt auf den physischen Widerstand der Materie (WIE). Diese greifbare Erfahrung nährt wiederum den ursprünglichen Sinn, so wie verrottendes Laub dem Boden neue Nährstoffe schenkt.
-      </p>
       <ul>
         <li><strong>Yuval Noah Hararis Mahnung (Nexus):</strong> KI ist der erste eigenständige Akteur. Ohne Erdung werden wir zu den <strong>„Kühen der Zukunft“</strong> auf digitalen Weiden.</li>
         <li><strong>Viktor Frankl und die analoge Stille ($T_{off} = 30\text{ s}$):</strong> Die Freiheit liegt im Raum zwischen Reiz und Reaktion. Unser System erzwingt ein <strong>30-Sekunden-Zeitfenster</strong> der Ruhe.</li>
@@ -610,23 +688,20 @@
         <li><strong>Symmetrische ternäre Logik (Setun {-1, 0, +1}):</strong>
           Das Zentrum ($0 = \text{Daheim}$) überwindet das Schwarz-Weiß-Denken.
         </li>
-        <li><strong>Intelligenz der Wurzelspitze (Baluška):</strong>
-          Hindernisse werden sanft umflossen statt stur gerammt.
-        </li>
         <li><strong>Die senkrechte WARUM-Tiefenwurzel:</strong>
-          Mit der Entfaltung der Krone wächst eine kräftige Wurzel tief in den Urgrund, um dem Ganzen seelischen Halt zu geben.
+          Mit der Entfaltung der Krone wächst eine kräftige Wurzel tief in den Urgrund, um dem Ganzen Halt zu geben.
         </li>
       </ul>
     </section>
 
     <section>
-      <h2>Ebene 3: Handwerk – MagneGrid und partnerschaftliche Hilfe</h2>
+      <h2>Ebene 3: ULM – Universelles Lernmittel für Kinder von 3 bis 103 Jahren</h2>
       <ul>
-        <li><strong>Befreiung aus der Helferfalle:</strong>
-          Partnerschaftliches Forschen am taktilen MagneGrid-Tisch.
+        <li><strong>ULM (Universelles Lernmittel für Kinder von 3 bis 103 Jahren):</strong>
+          Ein haptisches Übungsfeld (150×150 mm), das die Aufmerksamkeit von Bildschirmen zurück in die Fingerspitzen holt.
         </li>
-        <li><strong>Tastsinn als Befreier:</strong>
-          Sehbehinderte erfassen Magnetfelder rascher als Sehende am Bildschirm.
+        <li><strong>Befreiung aus der Helferfalle:</strong>
+          Partnerschaftliches Forschen am gemeinsamen Tisch des ULM.
         </li>
       </ul>
     </section>
@@ -877,7 +952,6 @@
   treeGroup.visible = false;
   scene.add(treeGroup);
 
-  // Funkcia pre orientovaný segment rastúci od P0 k P1
   function createGrowableSegment(p0, p1, radius, color) {
     const dir = new THREE.Vector3().subVectors(p1, p0);
     const len = dir.length();
@@ -963,7 +1037,7 @@
   const seg_parent_father = createGrowableSegment(M_father, birthPos, 0.9, COLOR_FATHER);
   const seg_parent_mother = createGrowableSegment(M_mother, birthPos, 0.9, COLOR_MOTHER);
 
-  // Bod narodenia 1959 (zlatá sféra na prahu Y = -6.0)
+  // Bod narodenia 1959
   const birthSeed = new THREE.Mesh(
     new THREE.SphereGeometry(1.0, 24, 24),
     new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xb45309 })
@@ -982,7 +1056,7 @@
   treeGroup.add(trunkMesh);
 
   // ROZKONÁRENIE OKOLO DVADSIATKY (1979+)
-  // Kánonické poradie: PREČO (300) -> ČO (200) -> AKO (100)
+  // Samsarický cyklus: PREČO (300) -> ČO (200) -> AKO (100) -> PREČO
   const branchTipPreco = new THREE.Vector3(-9, 14.5, -4);
   const branchTipCo    = new THREE.Vector3(0, 16.5, 5.5);
   const branchTipAko   = new THREE.Vector3(9.5, 13.5, -2);
@@ -991,12 +1065,12 @@
   const branchCo    = createGrowableSegment(new THREE.Vector3(0, 3.5, 0), branchTipCo, 0.65, 0x27ae60);
   const branchAko   = createGrowableSegment(new THREE.Vector3(0, 3.5, 0), branchTipAko, 0.65, 0x0284c7);
 
-  // SAMSARICKÝ CYKLUS: Cirkulujúca slučka PREČO -> ČO -> AKO -> PREČO
+  // Pulzujúca samsarická slučka
   const samsaraCurve = new THREE.CatmullRomCurve3([
     branchTipPreco,
     branchTipCo,
     branchTipAko,
-    new THREE.Vector3(0, 8.0, 0), // Prechod stredom späť nahor
+    new THREE.Vector3(0, 8.0, 0),
     branchTipPreco
   ]);
   const samsaraLoopGeo = new THREE.TubeGeometry(samsaraCurve, 48, 0.12, 8, true);
@@ -1009,7 +1083,7 @@
   samsaraLoopMesh.visible = false;
   treeGroup.add(samsaraLoopMesh);
 
-  // TRETÍ HĹBKOVÝ KOREŇ PREČO (rastie po objavení hlavných konárov smerom do hĺbky)
+  // TRETÍ HĹBKOVÝ KOREŇ PREČO (vrastá kolmo do hĺbky po objavení konárov)
   const tapRootMain = createGrowableSegment(birthPos, new THREE.Vector3(0, -25.0, 0), 0.65, 0xa855f7);
   const tapRootSub1 = createGrowableSegment(new THREE.Vector3(0, -25.0, 0), new THREE.Vector3(-3.5, -29.0, 2.5), 0.4, 0xa855f7);
   const tapRootSub2 = createGrowableSegment(new THREE.Vector3(0, -25.0, 0), new THREE.Vector3(3.5, -28.5, -2.0), 0.4, 0xa855f7);
@@ -1288,12 +1362,47 @@
   });
 
   // ==========================================
-  // 8. ANIMAČNÁ SLUČKA
+  // 8. OBSLUHA DOTAZNÍKA (EMAIL & SCHRÁNKA)
+  // ==========================================
+  function buildFeedbackText() {
+    const name = document.getElementById('fb-name').value || 'Anonym';
+    const roots = document.getElementById('fb-roots').value || '(bez odpovede)';
+    const udp = document.getElementById('fb-udp').value || '(bez odpovede)';
+    const gift = document.getElementById('fb-gift').value || '(bez odpovede)';
+    const letter = document.getElementById('fb-letter').value || '(bez odpovede)';
+
+    return `ODPOVEĎ NA DOTAZNÍK LATVOMY2 (UDP od 3 do 103 rokov)\n` +
+           `-----------------------------------------------------\n` +
+           `Odosielateľ / Vzťah: ${name}\n\n` +
+           `1. KORENE A MYŠLIENKA (PREČO 300):\n${roots}\n\n` +
+           `2. POMÔCKA UDP (ČO 200):\n${udp}\n\n` +
+           `3. VLASTNÝ DAR A SPOLUTVORBA (AKO 100):\n${gift}\n\n` +
+           `4. ODKAZ DO RODINNÉHO KÁNONU (PREČO 300):\n${letter}\n` +
+           `-----------------------------------------------------`;
+  }
+
+  window.handleFeedbackSubmit = function(e) {
+    e.preventDefault();
+    const body = encodeURIComponent(buildFeedbackText());
+    const subject = encodeURIComponent("LATVOMY2 :: Spätná väzba a odkaz od " + (document.getElementById('fb-name').value || 'priateľa'));
+    window.location.href = `mailto:jozo@dingo.sk?subject=${subject}&body=${body}`;
+  };
+
+  window.copyFeedbackToClipboard = function() {
+    const txt = buildFeedbackText();
+    navigator.clipboard.writeText(txt).then(() => {
+      alert("✅ Text dotazníka bol úspešne skopírovaný do schránky!\nMôžete ho vložiť do WhatsAppu, emailu alebo správy pre Jozefa.");
+    }).catch(() => {
+      alert("Text dotazníka:\n\n" + txt);
+    });
+  };
+
+  // ==========================================
+  // 9. ANIMAČNÁ SLUČKA
   // ==========================================
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    // Jemná rotácia samsarickej energetickej slučky
     if (samsaraLoopMesh.visible) {
       samsaraLoopMesh.rotation.y += 0.005;
     }
@@ -1308,7 +1417,7 @@
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 
-  // Inicializácia
+  // Inicializácia pri načítaní
   const savedTheme = localStorage.getItem('latvomy_theme');
   applyTheme(savedTheme === 'dark');
   applyLanguage(detectLanguage());
