@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LATVOMY | Exocortex v10.2</title>
+  <style>
+    :root {
+      --bg-color: #f5f5f5;
+      --text-color: #2c3e50;
+      --link-color: #0284c7;
+      --container-bg: #ffffff;
+      --border-color: #e0e0e0;
+      --accent-gold: #d97706;
+      --warn-bg: rgba(231, 76, 60, 0.08);
+      --warn-border: #e74c3c;
+    }
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --link-color: #64b5f6;
+      --container-bg: #1e1e1e;
+      --border-color: #333333;
+      --warn-bg: rgba(231, 76, 60, 0.16);
+      --warn-border: #ff5252;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 10px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      max-width: 920px;
+      width: 100%;
+      margin: 10px auto;
+      background: var(--container-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+    }
+    @media (min-width: 768px) { .container { margin: 30px auto; padding: 36px; } }
+
+    /* HLAVIČKA */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    h1 { font-size: 1.55em; margin: 0; color: var(--text-color); }
+    h1 b { color: var(--link-color); }
+    .trio-subtitle {
+      font-weight: 700;
+      color: var(--link-color);
+      margin-top: 2px;
+      font-size: 0.95em;
+      letter-spacing: 0.5px;
+    }
+    .subtitle { font-style: italic; color: #7f8c8d; margin-top: 4px; font-size: 0.9em; }
+
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      background: var(--container-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85em;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { background: var(--border-color); }
+    .btn-login { background: #0284c7; color: white; border-color: #0284c7; }
+    .btn-login:hover { background: #0369a1; }
+    [data-theme="dark"] .btn-login { background: #1a365d; color: #64b5f6; border-color: #64b5f6; }
+
+    /* JAZYKOVÉ MENU */
+    .lang-dropdown { position: relative; display: inline-block; }
+    .lang-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: var(--container-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+      z-index: 1000;
+      min-width: 140px;
+      overflow: hidden;
+    }
+    .lang-dropdown:hover .lang-menu,
+    .lang-dropdown:focus-within .lang-menu { display: block; }
+    .lang-item {
+      display: block;
+      padding: 8px 12px;
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.85em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .lang-item:hover { background: var(--border-color); color: var(--link-color); }
+    .lang-item.active { background: rgba(2, 132, 199, 0.12); color: var(--link-color); }
+
+    /* VÝSTRAŽNÝ PÁS */
+    .warning-banner {
+      background-color: var(--warn-bg);
+      border-left: 4px solid var(--warn-border);
+      padding: 12px 15px;
+      margin-bottom: 18px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.9em;
+      line-height: 1.45;
+    }
+
+    /* PLÁTNO A ROZHRANIE SCÉNY */
+    .stage-card {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      background: var(--container-bg);
+      position: relative;
+    }
+    .stage-toolbar {
+      background: var(--container-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .mode-pills { display: flex; gap: 6px; }
+    .mode-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 5px 11px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82em;
+      font-weight: bold;
+      transition: all 0.15s ease;
+    }
+    .mode-btn.active {
+      background: var(--link-color);
+      color: #ffffff;
+      border-color: var(--link-color);
+    }
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82em;
+      font-weight: 600;
+    }
+    .slider-group input[type="range"] { cursor: pointer; }
+
+    #viewport-container {
+      width: 100%;
+      height: 480px;
+      position: relative;
+      background: var(--container-bg);
+      overflow: hidden;
+      transition: background 0.3s ease;
+    }
+    #img-2d-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: contain;
+      z-index: 2;
+      pointer-events: none;
+      transition: opacity 0.15s ease, filter 0.3s ease;
+    }
+    [data-theme="dark"] #img-2d-layer {
+      filter: invert(0.9) hue-rotate(180deg) contrast(1.15) brightness(0.95);
+    }
+    #webgl-canvas-container {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+    }
+    #stage-loading {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.65);
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 0.9em;
+      z-index: 10;
+    }
+    .stage-caption {
+      padding: 8px 14px;
+      font-size: 0.85em;
+      color: #7f8c8d;
+      background: var(--container-bg);
+      border-top: 1px solid var(--border-color);
+      text-align: right;
+      font-style: italic;
+    }
+
+    /* 3D ŠTÍTKY KONÁROV */
+    .branch-label-overlay {
+      position: absolute;
+      font-family: ui-monospace, monospace;
+      font-weight: bold;
+      font-size: 0.82em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      display: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    .branch-preco { background: rgba(142, 68, 173, 0.95); color: #ffffff; border: 1px solid #d2b4de; }
+    .branch-co    { background: rgba(39, 174, 96, 0.95); color: #ffffff; border: 1px solid #abebc6; }
+    .branch-ako   { background: rgba(2, 132, 199, 0.95); color: #ffffff; border: 1px solid #aed6f1; }
+
+    /* ČLÁNKY A SEKCIE */
+    .lang-article { display: none; }
+    .lang-article.active { display: block; }
+    section { margin-bottom: 2rem; }
+    h2 {
+      font-size: 1.25em;
+      color: var(--text-color);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 5px;
+      margin-bottom: 12px;
+    }
+    p { margin-bottom: 12px; line-height: 1.7; }
+    ul { list-style: square; margin-left: 1.5rem; margin-bottom: 16px; }
+    li { margin-bottom: 5px; }
+
+    .quote-box {
+      background: rgba(217, 119, 6, 0.08);
+      border-left: 4px solid var(--accent-gold);
+      padding: 11px 15px;
+      margin: 15px 0;
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+    }
+    .formula-badge {
+      background: rgba(2, 132, 199, 0.07);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--link-color);
+      padding: 9px 13px;
+      margin: 13px 0;
+      font-family: ui-monospace, monospace;
+      font-size: 0.88em;
+      color: var(--link-color);
+      border-radius: 4px;
+    }
+    .term {
+      color: var(--link-color);
+      border-bottom: 1px dotted var(--link-color);
+      cursor: help;
+      font-weight: 600;
+    }
+
+    .sources-box {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-top: 18px;
+    }
+    .sources-box h4 { font-size: 0.95em; margin-bottom: 8px; }
+    .sources-box a { color: var(--link-color); text-decoration: none; }
+    .sources-box a:hover { text-decoration: underline; }
+
+    .footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      margin-top: 26px;
+      font-size: 0.85em;
+      color: #7f8c8d;
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- HLAVIČKA -->
+  <header class="header">
+    <div>
+      <h1 id="ui-title"><b>LATVOMY</b> – Laboratórium Tvorivého Myslenia</h1>
+      <p class="trio-subtitle" id="ui-trio">(Láska · Tvorivosť · Myslenie)</p>
+      <p class="subtitle" id="ui-subtitle">Denný režim, čisté UI, vysoký kontrast a viacdimenzionálny zrkadlový strom.</p>
+    </div>
+    
+    <div class="controls">
+      <button class="btn" id="ui-btn-surface" onclick="resetToSurface()">🏠 Povrch</button>
+      
+      <!-- JAZYKOVÉ MENU SO ZEMEGULOU -->
+      <div class="lang-dropdown">
+        <button class="btn" id="ui-btn-lang" aria-label="Jazyk">🌐 <span id="current-lang-code">SK</span> ▾</button>
+        <div class="lang-menu">
+          <div class="lang-item" onclick="applyLanguage('sk')">🇸🇰 Slovenčina</div>
+          <div class="lang-item" onclick="applyLanguage('hu')">🇭🇺 Magyar</div>
+          <div class="lang-item" onclick="applyLanguage('en')">🇬🇧 English</div>
+          <div class="lang-item" onclick="applyLanguage('de')">🇩🇪 Deutsch</div>
+        </div>
+      </div>
+
+      <button class="btn" id="ui-btn-theme" title="Prepnúť režim (Deň/Noc)">🌓</button>
+      <a href="http://192.168.1.234:30001" class="btn btn-login" id="ui-btn-login" target="_blank" rel="noopener">🔑 Login / Velín</a>
+    </div>
+  </header>
+
+  <!-- VÝSTRAŽNÝ BANNER -->
+  <div class="warning-banner" id="ui-warning-banner">
+    ⚠️ <strong>UPOZORNENIE:</strong> Ďalšie čítanie a interakcia s týmto obsahom môže zmeniť myslenie čitateľa.
+  </div>
+
+  <!-- MULTIMODÁLNE PLÁTNO (2D / 3D / 4D) -->
+  <div class="stage-card">
+    <div class="stage-toolbar">
+      <div class="mode-pills">
+        <button id="ui-mode-2d" class="mode-btn" onclick="setViewMode('2d')">2D Kresba 1975</button>
+        <button id="ui-mode-3d" class="mode-btn active" onclick="setViewMode('3d')">3D Model & Mriežka</button>
+        <button id="ui-mode-4d" class="mode-btn" onclick="setViewMode('4d')">4D Strom v čase</button>
+      </div>
+
+      <!-- Posuvník prelínania (2D/3D) -->
+      <div class="slider-group" id="blend-slider-container">
+        <span id="ui-lbl-blend-2d">2D Kresba</span>
+        <input type="range" id="blend-slider" min="0" max="100" value="0" title="Prelínanie">
+        <span id="ui-lbl-blend-3d">3D Dvojča</span>
+      </div>
+
+      <!-- Posuvník času (4D) -->
+      <div class="slider-group" id="time-slider-container" style="display: none;">
+        <span><span id="ui-lbl-time-prefix">Rok:</span> <b id="time-val-label">2026</b></span>
+        <input type="range" id="time-slider" min="1880" max="2035" value="2026" step="1">
+      </div>
+    </div>
+
+    <div id="viewport-container">
+      <div id="stage-loading">Inicializácia 3D plátna a modelu...</div>
+      <!-- Pôvodná kresba 1975 -->
+      <img id="img-2d-layer" src="latvomy0.jpg" alt="Pôvodná kresba 1975" style="opacity: 0;">
+      <!-- Three.js Canvas -->
+      <div id="webgl-canvas-container"></div>
+      
+      <!-- 3D Návestia konárov pre 4D režim -->
+      <div id="lbl-branch-preco" class="branch-label-overlay branch-preco">PREČO (300)</div>
+      <div id="lbl-branch-co"    class="branch-label-overlay branch-co">ČO (200)</div>
+      <div id="lbl-branch-ako"   class="branch-label-overlay branch-ako">AKO (100)</div>
+    </div>
+
+    <div class="stage-caption" id="ui-stage-caption">
+      Preskúmajte šachty matice a jej presný stred. (Otcov diagram z roku 1975)
+    </div>
+  </div>
+
+  <p id="ui-intro-quote" style="font-size: 1.02rem; line-height: 1.8; margin-bottom: 1.8rem; font-style: italic;">
+    Tvorivosť je jedna z prirodzených vlastností človeka. Mnoho ľudí ale umrie bez toho, aby to objavilo, ale vo forme "zdravého sedliackeho rozumu" ho mnohí používajú.
+  </p>
+
+  <!-- ===================================================================
+       1. SLOVENSKÁ VERZIA (SK)
+       =================================================================== -->
+  <article id="art-sk" class="lang-article active">
+    <section>
+      <h2>Úroveň 1: Prečo to robíme – Samsarický cyklus a rodová pamäť</h2>
+      <p>
+        V kánone LATVOMY2 neuvažujeme v uzavretej lineárnej priamke. Riadiacim princípom tvorby a učenia je <strong>samsarický cyklus poznania</strong>:
+      </p>
+      <div class="formula-badge">
+        PREČO (Láska, 300) &xrarr; ČO (Myslenie, 200) &xrarr; AKO (Tvorivosť, 100) &xrarr; Návrat na PREČO (300)
+      </div>
+      <p>
+        Zmysel a etika (PREČO) sa pretavujú do presných zmlúv a didaktických scenárov (ČO), ktoré v dielni narážajú na fyzický odpor materiálu a kód (AKO). Hmotná skúsenosť následne spätne vyživuje a preveruje pôvodný zámer, presne ako opadané lístie v komposte vyživuje korene.
+      </p>
+      <ul>
+        <li><strong>Varovanie Yuvala Noaha Harariho (Nexus / Hyde Park ČT):</strong> AI je prvým samostatným aktérom v dejinách. Ak stratíme kontakt s realitou a odovzdáme rozhodovanie algoritmom, staneme sa <strong>„kravami budúcnosti“</strong> – bytosťami na digitálnej pastve, ktoré vôbec nerozumejú finančným a dátovým trhom riadiacim ich osud.</li>
+        <li><strong>Viktor Frankl a analógové ticho ($T_{off} = 30\text{ s}$):</strong> Sloboda človeka leží v priestore medzi podnetom a reakciou. V systéme technicky vymáhame <strong>30-sekundovú Franklovu medzeru ($T_{off}$)</strong> – čas na stíšenie a overenie hypotézy bez dotyku obrazovky.</li>
+        <li><strong>Genealogická konvergencia koreňov (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
+          <br>1. <strong>Sedliacka vetva (Milhosť):</strong> Pradedovia a prababičky (Szakács, Cikó, Pataki, Zöld) zbiehajúci sa do matkinej línie. Rováš a truhlica na osivo z roku 1932, z ktorej sa nikdy nesmelo zjesť všetko.
+          <br>2. <strong>Staviteľská olovnica (Streda nad Bodrogom):</strong> Murárski predkovia (Vaskó, Nagy, Rapcsák, Compoly) a otec stavbár-umelec Jozef Vaško (1932), ktorý v roku 1975 navrhol žltú sféru v ochrannej mušli. Murár berie olovnicu, overí zvislicu a stavia klenbu, ktorá nespadne.
+        </li>
+      </ul>
+      <div class="quote-box">
+        „Každý má svoju pravdu. Mimoriadne si však vážim človeka, ktorý ma presvedčí, že jeho pravda je pravdivejšia než moja, lebo ma niečo naučil.“ (Motto n)
+      </div>
+    </section>
+
+    <section>
+      <h2>Úroveň 2: Ako udržať poriadok – Trojúrovňová logika a inteligencia koreňa</h2>
+      <p>
+        Mozog nedokáže naraz držať desiatky vetiev, úloh a nedozretých nápadov. Namiesto prehltenia meníme geometriu myslenia:
+      </p>
+      <ul>
+        <li><strong>Ternárna logika (Setuň {-1, 0, +1}):</strong>
+          Ruský počítač Setuň z roku 1958 ukázal, že svet nie je binárne čiernobiely:
+          <div class="formula-badge">
+            {-1: Odpor / Prekážka} &larr;&rarr; {0: Stred / Franklova medzera T_off / DOMOV} &larr;&rarr; {+1: Svetlo / Rast}
+          </div>
+          Nula nie je prázdno, ale <strong>pevný domov ($Z = 0$)</strong>.
+        </li>
+        <li><strong>Inteligencia špičky koreňa (Baluška, Darwin):</strong>
+          Rastlinná neurobiológia dokazuje, že koreňový vrchol vníma prekážku v predstihu. Nenaráža do skaly čelne, ale obtečie ju po dráhe najmenšieho odporu. Takto konvergujú aj korene nášho rodu ponad historické zlomy do prítomného kmeňa.
+        </li>
+        <li><strong>Tretí hĺbkový koreň PREČO:</strong>
+          Po vybudovaní koruny okolo dvadsiateho roku života začína do hĺbky rásť kolmý koreň hermeneutiky, ktorý kotví celú stavbu vo filozofii a zmysle.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Úroveň 3: Čo konkrétne staviame – MagneGrid a pomoc bez spasiteľstva</h2>
+      <div class="formula-badge">
+        Pasca Spasiteľa: Po-moc &xrarr; Moc nad druhým &xrarr; Ne-moc (vyhorenie)
+      </div>
+      <ul>
+        <li><strong>Paralelná pomoc namiesto poúčania (Kostihoj / Knitbone):</strong>
+          Ak niekomu pomáhame zhora, vytvárame závislosť a sami vyhoríme. Ako Kostihoj aktéri si sadáme za spoločný stôl a medzi seba kladieme dosku MagneGrid (150×150 mm s Hallovými senzormi SS49E).
+        </li>
+        <li><strong>Hmat ako rovnostár:</strong>
+          Nevidiaci človek alebo dieťa vníma jemným hmatom fyzikálny odpor magnetov skôr než dospelý unavený z obrazoviek. Individuálne obmedzenie uvoľňuje dar, ktorý pomáha celej skupine.
+        </li>
+        <li><strong>Zvrchovaná domáca strojovňa:</strong>
+          Všetky zmluvy bežia na lokálnom serveri bez syntetických príkras a halucinácií (pravidlo <code>allow_synthetic_fill: false</code> na portoch :8085 a :30080).
+        </li>
+      </ul>
+
+      <div class="sources-box">
+        <h4>Overené pramene pre rodinu a priateľov:</h4>
+        <ul>
+          <li><a href="https://www.ceskatelevize.cz/porady/10441294653-hyde-park-civilizace/226411058091017/" target="_blank" rel="noopener">ČT Hyde Park Civilizace: Yuval Noah Harari o knihe Nexus a AI aktéroch</a></li>
+          <li><a href="https://sk.wikipedia.org/wiki/Redaktor:Jozo" target="_blank" rel="noopener">Wikipédia: Redaktor Jozo – Osobná reflexia bodu zlomu a nezištnej služby</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Setun" target="_blank" rel="noopener">Ternárny počítač Setuň (1958) – Logika troch stavov {-1, 0, +1}</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Plant_neurobiology" target="_blank" rel="noopener">Rastlinná neurobiológia: Inteligencia koreňového apexu (Baluška, Darwin)</a></li>
+        </ul>
+      </div>
+    </section>
+  </article>
+
+  <!-- ===================================================================
+       2. MAĎARSKÁ VERZIA (HU) - MAGYAR NYELVŰ ÖSSZEFOGLALÓ
+       =================================================================== -->
+  <article id="art-hu" class="lang-article">
+    <section>
+      <h2>1. Szint: Miért csináljuk – A szamszára ciklus és a családi emlékezet</h2>
+      <p>
+        A LATVOMY2 kánonjában a megismerés és alkotás nem egyirányú vonal, hanem egy <strong>örök szamszára-körforgás</strong>:
+      </p>
+      <div class="formula-badge">
+        MIÉRT (Szeretet, 300) &xrarr; MIT (Gondolkodás, 200) &xrarr; HOGYAN (Alkotás, 100) &xrarr; Visszatérés a MIÉRT-hez (300)
+      </div>
+      <p>
+        A szándék és az etika (MIÉRT) egzakt szerződésekbe és didaktikai forgatókönyvekbe öltözik (MIT), amelyek a műhelyben találkoznak az anyag és a kód fizikai ellenállásával (HOGYAN). A megélt tapasztalat pedig visszatáplálja a szellemet, mint az aláhullott lomb a talaj gyökereit.
+      </p>
+      <ul>
+        <li><strong>Yuval Noah Harari figyelmeztetése (Nexus):</strong> A mesterséges intelligencia a történelem első önálló cselekvője. Ha vakon átadjuk a döntést a képernyőknek, a <strong>„jövő teheneivé”</strong> válunk, békésen legelészve anélkül, hogy értenénk a sorsunkról döntő digitális piacokat.</li>
+        <li><strong>Viktor Frankl és az analóg csend ($T_{off} = 30\text{ s}$):</strong> A szabadság az inger és a válasz közötti térben él. Rendszerünkben tudatosan bevezetjük a <strong>30 másodperces Frankl-rést ($T_{off}$)</strong>, amikor a kéz elengedi a gépet, és a lélek visszanyeri nyugalmát.</li>
+        <li><strong>Családi gyökerek összefutása (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
+          <br>1. <strong>Földműves ág (Migléc / Milhosť):</strong> Dédnagyszülők (Szakács, Cikó, Pataki, Zöld) és a rovásfa az 1932-es vetőmagos ládával.
+          <br>2. <strong>Építőmesteri vonal (Bodrogszerdahely / Streda nad Bodrogom):</strong> Kőműves ősök (Vaskó, Nagy, Rapcsák, Compoly) és Vaskó József édesapa (1932), aki 1975-ben megrajzolta az óvó kagylóban nyugvó sárga gömböt.
+        </li>
+      </ul>
+      <div class="quote-box">
+        „Mindenkinek megvan a maga igazsága... De különösen becsülöm azt, aki meggyőz arról, hogy az ő igazsága igazabb, mert tanultam tőle.” (n-edik mottó)
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Szint: Rend a dzsungelben – Háromértékű logika és a mélygyökér</h2>
+      <ul>
+        <li><strong>Háromértékű logika (Szetuny gép {-1, 0, +1}):</strong>
+          A világ nem fekete-fehér. A Bruszencov-féle kiegyensúlyozott logika a biztos középpontra épít:
+          <div class="formula-badge">
+            {-1: Ellenállás / Szikla} &larr;&rarr; {0: Frankl-rés / Otthon T_off} &larr;&rarr; {+1: Fény / Növekedés}
+          </div>
+          A nulla a stabil <strong>Otthon ($Z = 0$)</strong>.
+        </li>
+        <li><strong>A gyökércsúcs intelligenciája (Baluška, Darwin):</strong>
+          A gyökér vége finom érzékszerv. Nem ütközik makacsul a sziklának, hanem elegánsan kikerüli. Családunk gyökerei is így futnak össze a jelen törzsébe ($Z = 0$).
+        </li>
+        <li><strong>A harmadik, mélyre hatoló MIÉRT-gyökér:</strong>
+          A húszas években kibomló korona megjelenésével párhuzamosan a fa egy mély, függőleges gyökeret növeszt a talajba, amely a filozófiai értelem szilárd alapját adja.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. Szint: A műhely valósága – MagneGrid és mellérendelt segítségnyújtás</h2>
+      <div class="formula-badge">
+        A Megmentő csapdája: Segítség &xrarr; Hatalom a másik felett &xrarr; Tehetetlenség és kiégés
+      </div>
+      <ul>
+        <li><strong>Mellérendelt segítség (Fekete nadálytő / Knitbone):</strong>
+          Egy asztalhoz ülünk le, és a tapintásos <strong>MagneGrid</strong> táblát helyezzük magunk közé egyenlő felekként.
+        </li>
+        <li><strong>Tapintás mint egyenlőség:</strong>
+          Egy látássérült ember finom ujjaival gyakran gyorsabban érzi a mágneses mezőt, mint a képernyőkhöz szokott felnőttek. Egyéni korlátja ajándékká válik a közösség számára.
+        </li>
+      </ul>
+    </section>
+  </article>
+
+  <!-- ===================================================================
+       3. ANGLICKÁ VERZIA (EN)
+       =================================================================== -->
+  <article id="art-en" class="lang-article">
+    <section>
+      <h2>Level 1: Why We Build – The Samsaric Cycle & Ancestral Roots</h2>
+      <p>
+        In the LATVOMY2 canon, creation and cognition are not linear dead ends, but a <strong>cyclical regenerative journey</strong>:
+      </p>
+      <div class="formula-badge">
+        WHY (Love, 300) &xrarr; WHAT (Mind, 200) &xrarr; HOW (Creativity, 100) &xrarr; Return to WHY (300)
+      </div>
+      <p>
+        Purpose and ethics (WHY) materialize into contracts and didactic scenarios (WHAT), meeting the physical friction of matter and code (HOW). Experiential resistance in turn enriches and refines the core purpose, as fallen leaves compost back into soil nutrients.
+      </p>
+      <ul>
+        <li><strong>Yuval Noah Harari's Warning (Nexus):</strong> AI is history's first autonomous agent. Relinquishing critical discernment turns us into the <strong>"cattle of the future"</strong>.</li>
+        <li><strong>Viktor Frankl & Analog Silence ($T_{off} = 30\text{ s}$):</strong> Human freedom lives in the space between stimulus and response. We technically enforce a <strong>30-second Frankl Gap ($T_{off}$)</strong>.</li>
+        <li><strong>Ancestral Convergence (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
+          <br>1. <strong>Peasant Lineage (Milhosť):</strong> Tally stick and the 1932 seed chest preserved through every crisis.
+          <br>2. <strong>Builder's Precision (Streda nad Bodrogom):</strong> Stonemason ancestors and father Jozef Vaskó (1932) who drafted the 1975 yellow sphere inside the protective shell.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Level 2: Ordering the Jungle – Balanced Ternary & Root Wisdom</h2>
+      <ul>
+        <li><strong>Balanced Ternary Logic (Setun {-1, 0, +1}):</strong>
+          Overcoming binary polarization through a calm equilibrium point:
+          <div class="formula-badge">
+            {-1: Resistance / Floor} &larr;&rarr; {0: Home / Frankl Gap T_off} &larr;&rarr; {+1: Ascent / Light}
+          </div>
+        </li>
+        <li><strong>Root Apex Wisdom (Baluška, Darwin):</strong>
+          Plant roots sense subterranean stones and gently bypass them.
+        </li>
+        <li><strong>The Deep Taproot of WHY:</strong>
+          As the canopy branches out in early adulthood, a deep vertical taproot plunges into the subterranean realm, anchoring the whole architecture in purpose.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Level 3: Physical Grounding – MagneGrid & Egalitarian Support</h2>
+      <div class="formula-badge">
+        Savior Trap: Helping &xrarr; Power over the other &xrarr; Burnout & Impotence
+      </div>
+      <ul>
+        <li><strong>The Knitbone Actor:</strong> We collaborate as equals at a shared table around the tactile <strong>MagneGrid</strong> interface.</li>
+        <li><strong>Touch as an Equalizer:</strong> Visually impaired learners detect magnetic fields with dexterity exceeding screen-fatigued peers.</li>
+      </ul>
+    </section>
+  </article>
+
+  <!-- ===================================================================
+       4. NEMECKÁ VERZIA (DE)
+       =================================================================== -->
+  <article id="art-de" class="lang-article">
+    <section>
+      <h2>Ebene 1: Das Warum – Der samsarische Zyklus und die Ahnenwurzeln</h2>
+      <p>
+        Im LATVOMY2-Kanon ist Schöpfung keine lineare Einbahnstraße, sondern ein <strong>samsarischer Kreislauf der Erkenntnis</strong>:
+      </p>
+      <div class="formula-badge">
+        WARUM (Liebe, 300) &xrarr; WAS (Denken, 200) &xrarr; WIE (Schöpferkraft, 100) &xrarr; Rückkehr zum WARUM (300)
+      </div>
+      <p>
+        Sinn und Ethik (WARUM) gießen sich in didaktische Verträge (WAS) und treffen in der Werkstatt auf den physischen Widerstand der Materie (WIE). Diese greifbare Erfahrung nährt wiederum den ursprünglichen Sinn, so wie verrottendes Laub dem Boden neue Nährstoffe schenkt.
+      </p>
+      <ul>
+        <li><strong>Yuval Noah Hararis Mahnung (Nexus):</strong> KI ist der erste eigenständige Akteur. Ohne Erdung werden wir zu den <strong>„Kühen der Zukunft“</strong> auf digitalen Weiden.</li>
+        <li><strong>Viktor Frankl und die analoge Stille ($T_{off} = 30\text{ s}$):</strong> Die Freiheit liegt im Raum zwischen Reiz und Reaktion. Unser System erzwingt ein <strong>30-Sekunden-Zeitfenster</strong> der Ruhe.</li>
+        <li><strong>Ahnen-Konvergenz (8 &rarr; 4 &rarr; 2 &rarr; 1):</strong>
+          <br>1. <strong>Bäuerliche Linie (Milhosť):</strong> Das hölzerne Kerbholz und die Getreidetruhe von 1932.
+          <br>2. <strong>Baumeisterlinie (Streda nad Bodrogom):</strong> Maurer-Vorfahren und Vater Jozef Vaskó (1932) mit der gelben Sphäre von 1975.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Ebene 2: Ordnung im Dschungel – Ternäre Logik und Tiefenwurzel</h2>
+      <ul>
+        <li><strong>Symmetrische ternäre Logik (Setun {-1, 0, +1}):</strong>
+          Das Zentrum ($0 = \text{Daheim}$) überwindet das Schwarz-Weiß-Denken.
+        </li>
+        <li><strong>Intelligenz der Wurzelspitze (Baluška):</strong>
+          Hindernisse werden sanft umflossen statt stur gerammt.
+        </li>
+        <li><strong>Die senkrechte WARUM-Tiefenwurzel:</strong>
+          Mit der Entfaltung der Krone wächst eine kräftige Wurzel tief in den Urgrund, um dem Ganzen seelischen Halt zu geben.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Ebene 3: Handwerk – MagneGrid und partnerschaftliche Hilfe</h2>
+      <ul>
+        <li><strong>Befreiung aus der Helferfalle:</strong>
+          Partnerschaftliches Forschen am taktilen MagneGrid-Tisch.
+        </li>
+        <li><strong>Tastsinn als Befreier:</strong>
+          Sehbehinderte erfassen Magnetfelder rascher als Sehende am Bildschirm.
+        </li>
+      </ul>
+    </section>
+  </article>
+
+  <!-- PÄTIČKA -->
+  <footer class="footer">
+    <p id="ui-footer-canon">LATVOMY Rodinný Archív &copy; 2026 | SSoT Kánon (Bodrogköz &times; Milhosť)</p>
+    <p id="ui-footer-note">Poschodie: 300_Hermeneutics & 200_Didactic_Aids | Vytvorené v syntéze s asynchrónnym knihovníkom.</p>
+  </footer>
+
+</div>
+
+<!-- THREE.JS IMPORT & MULTIMODÁLNY SKRIPT -->
+<script type="module">
+  import * as THREE from 'https://esm.sh/three@0.150.1';
+  import { OrbitControls } from 'https://esm.sh/three@0.150.1/examples/jsm/controls/OrbitControls.js';
+  import { GLTFLoader } from 'https://esm.sh/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+
+  // 1. LOKALIZÁCIA UI PRVKOV
+  const I18N = {
+    sk: {
+      code: "SK",
+      title: "<b>LATVOMY</b> – Laboratórium Tvorivého Myslenia",
+      trio: "(Láska · Tvorivosť · Myslenie)",
+      subtitle: "Denný režim, čisté UI, vysoký kontrast a viacdimenzionálny zrkadlový strom.",
+      btnSurface: "🏠 Povrch",
+      btnLogin: "🔑 Login / Velín",
+      warning: "⚠️ <strong>UPOZORNENIE:</strong> Ďalšie čítanie a interakcia s týmto obsahom môže zmeniť myslenie čitateľa.",
+      mode2d: "2D Kresba 1975",
+      mode3d: "3D Model & Mriežka",
+      mode4d: "4D Strom v čase",
+      lblBlend2d: "2D Kresba",
+      lblBlend3d: "3D Dvojča",
+      lblTimePrefix: "Rok:",
+      caption3d: "Preskúmajte šachty matice a jej presný stred. (Otcov diagram z roku 1975)",
+      caption2d: "2D Kresba (1975): 'Open hearts, open minds, open wills...'",
+      caption4d: "4D Strom: 8 prarodičov &rarr; 4 &rarr; 2 &rarr; 1959 narodenie &rarr; kmeň &rarr; konáre a hĺbkový koreň PREČO.",
+      branchPreco: "PREČO (300)",
+      branchCo: "ČO (200)",
+      branchAko: "AKO (100)",
+      quote: "Tvorivosť je jedna z prirodzených vlastností človeka. Mnoho ľudí ale umrie bez toho, aby to objavilo, ale vo forme \"zdravého sedliackeho rozumu\" ho mnohí používajú.",
+      footerCanon: "LATVOMY Rodinný Archív © 2026 | SSoT Kánon (Bodrogköz × Milhosť)",
+      footerNote: "Poschodie: 300_Hermeneutics & 200_Didactic_Aids | Vytvorené v syntéze s asynchrónnym knihovníkom."
+    },
+    hu: {
+      code: "HU",
+      title: "<b>LATVOMY</b> – Kreatív Gondolkodás Laboratóriuma",
+      trio: "(Szeretet · Alkotás · Gondolkodás)",
+      subtitle: "Nappali mód, tiszta felület, nagy kontraszt és többdimenziós tükörfa.",
+      btnSurface: "🏠 Felszín",
+      btnLogin: "🔑 Belépés / Vezérlő",
+      warning: "⚠️ <strong>FIGYELMEZTETÉS:</strong> A tartalom további olvasása és az azzal való interakció megváltoztathatja az olvasó gondolkodását.",
+      mode2d: "2D Rajz 1975",
+      mode3d: "3D Modell & Rács",
+      mode4d: "4D Időfa",
+      lblBlend2d: "2D Rajz",
+      lblBlend3d: "3D Iker",
+      lblTimePrefix: "Év:",
+      caption3d: "Fedezze fel a mátrix aknáit és pontos középpontját. (Édesapa 1975-ös diagramja)",
+      caption2d: "2D Rajz (1975): 'Nyitott szívek, nyitott elmék, nyitott szándékok...'",
+      caption4d: "4D Időfa: 8 dédszülő &rarr; 4 &rarr; 2 &rarr; 1959 születés &rarr; törzs &rarr; MIÉRT, MIT, HOGYAN ágak & mélygyökér.",
+      branchPreco: "MIÉRT (300)",
+      branchCo: "MIT (200)",
+      branchAko: "HOGYAN (100)",
+      quote: "A kreativitás az ember egyik természetes tulajdonsága. Sokan úgy halnak meg, hogy nem fedezik fel, de a \"józan paraszti ész\" formájában sokan használják.",
+      footerCanon: "LATVOMY Családi Archívum © 2026 | SSoT Kánon (Bodrogköz × Milhosť)",
+      footerNote: "Szint: 300_Hermeneutics & 200_Didactic_Aids | Aszinkron könyvtárossal együttműködve."
+    },
+    en: {
+      code: "EN",
+      title: "<b>LATVOMY</b> – Laboratory of Creative Thinking",
+      trio: "(Love · Creativity · Mind)",
+      subtitle: "Day mode, clean UI, high contrast, and multi-dimensional mirror tree.",
+      btnSurface: "🏠 Surface",
+      btnLogin: "🔑 Login / Control",
+      warning: "⚠️ <strong>WARNING:</strong> Further reading and interaction with this content may alter the reader's thinking.",
+      mode2d: "2D Drawing 1975",
+      mode3d: "3D Model & Grid",
+      mode4d: "4D Tree in Time",
+      lblBlend2d: "2D Drawing",
+      lblBlend3d: "3D Twin",
+      lblTimePrefix: "Year:",
+      caption3d: "Explore the matrix shafts and its precise center. (Father's 1975 diagram)",
+      caption2d: "2D Drawing (1975): 'Open hearts, open minds, open wills...'",
+      caption4d: "4D Tree: 8 ancestors &rarr; 4 &rarr; 2 &rarr; 1959 birth &rarr; trunk &rarr; WHY, WHAT, HOW branches & taproot.",
+      branchPreco: "WHY (300)",
+      branchCo: "WHAT (200)",
+      branchAko: "HOW (100)",
+      quote: "Creativity is one of the natural qualities of humans. Many die without discovering it, but in the form of 'common sense' many use it.",
+      footerCanon: "LATVOMY Family Archive © 2026 | SSoT Canon (Bodrogköz × Milhosť)",
+      footerNote: "Floor: 300_Hermeneutics & 200_Didactic_Aids | Synthesized with asynchronous librarian."
+    },
+    de: {
+      code: "DE",
+      title: "<b>LATVOMY</b> – Laboratorium des Schöpferischen Denkens",
+      trio: "(Liebe · Schöpferkraft · Denken)",
+      subtitle: "Tagmodus, saubere Benutzeroberfläche, hoher Kontrast und mehrdimensionaler Spiegelbaum.",
+      btnSurface: "🏠 Oberfläche",
+      btnLogin: "🔑 Login / Leitstand",
+      warning: "⚠️ <strong>WARNUNG:</strong> Weiteres Lesen und Interagieren mit diesem Inhalt kann das Denken des Lesers verändern.",
+      mode2d: "2D Zeichnung 1975",
+      mode3d: "3D Modell & Gitter",
+      mode4d: "4D Zeitbaum",
+      lblBlend2d: "2D Zeichnung",
+      lblBlend3d: "3D Zwilling",
+      lblTimePrefix: "Jahr:",
+      caption3d: "Erkunden Sie die Schächte der Matrix und ihr genaues Zentrum. (Vaters Diagramm von 1975)",
+      caption2d: "2D Zeichnung (1975): 'Offene Herzen, offener Geist, offener Wille...'",
+      caption4d: "4D Zeitbaum: 8 Ahnen &rarr; 4 &rarr; 2 &rarr; 1959 Geburt &rarr; Stamm &rarr; WARUM, WAS, WIE Äste & Tiefenwurzel.",
+      branchPreco: "WARUM (300)",
+      branchCo: "WAS (200)",
+      branchAko: "WIE (100)",
+      quote: "Kreativität ist eine der natürlichen Eigenschaften des Menschen. Viele sterben, ohne sie entdeckt zu haben, aber in Form von 'gesundem Menschenverstand' nutzen sie viele.",
+      footerCanon: "LATVOMY Familienarchiv © 2026 | SSoT Kanon (Bodrogköz × Milhosť)",
+      footerNote: "Ebene: 300_Hermeneutics & 200_Didactic_Aids | Erstellt in Synthese mit dem asynchronen Bibliothekar."
+    }
+  };
+
+  let currentLang = 'sk';
+  let currentMode = '3d';
+
+  const imgLayer = document.getElementById('img-2d-layer');
+  const blendSlider = document.getElementById('blend-slider');
+  const blendContainer = document.getElementById('blend-slider-container');
+  const timeSliderContainer = document.getElementById('time-slider-container');
+  const timeSlider = document.getElementById('time-slider');
+  const timeLabel = document.getElementById('time-val-label');
+  const container = document.getElementById('webgl-canvas-container');
+
+  const lblPreco = document.getElementById('lbl-branch-preco');
+  const lblCo = document.getElementById('lbl-branch-co');
+  const lblAko = document.getElementById('lbl-branch-ako');
+
+  // Three.js SCÉNA (Kánonická geometria a kamera z index – v10.2.html)
+  const scene = new THREE.Scene();
+  const aspect = (container.clientWidth || 800) / (container.clientHeight || 480);
+  const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 250);
+
+  const cameraSurfacePos = new THREE.Vector3(40.64, 5.13, 47.28);
+  const cameraSurfaceTarget = new THREE.Vector3(0, -5.00, 0);
+  camera.position.copy(cameraSurfacePos);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.target.copy(cameraSurfaceTarget);
+  controls.minDistance = 10;
+  controls.maxDistance = 150;
+
+  const light = new THREE.DirectionalLight(0xffffff, 1.4);
+  light.position.set(20, 35, 20);
+  scene.add(light);
+  const ambLight = new THREE.AmbientLight(0x777777);
+  scene.add(ambLight);
+
+  // ==========================================
+  // 2. SKUPINA 3D: FOYER A BUNKY MATICE (Z = 0, y = -6.0)
+  // ==========================================
+  const foyerGroup = new THREE.Group();
+  scene.add(foyerGroup);
+
+  const GRID_SIZE = 15;
+  const CELL_SIZE = 4;
+  const offset = (GRID_SIZE * CELL_SIZE) / 2;
+  const cells = [];
+
+  const ELEVATORS_CONFIG = [
+    { gridX: 0, gridZ: 0, color: 0xf1c40f },
+    { gridX: 7, gridZ: 7, color: 0x27ae60 }, // STRED
+    { gridX: 14, gridZ: 14, color: 0x2980b9 },
+    { gridX: 0, gridZ: 14, color: 0x7f8c8d },
+    { gridX: 14, gridZ: 0, color: 0xf39c12 },
+    { gridX: 3, gridZ: 3, color: 0xe67e22 },
+    { gridX: 3, gridZ: 11, color: 0x8e44ad },
+    { gridX: 11, gridZ: 3, color: 0xd35400 },
+    { gridX: 11, gridZ: 11, color: 0x16a085 },
+    { gridX: 0, gridZ: 7, color: 0xe84393 }
+  ];
+
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let z = 0; z < GRID_SIZE; z++) {
+      const cellGeo = new THREE.PlaneGeometry(CELL_SIZE - 0.2, CELL_SIZE - 0.2);
+      const elCfg = ELEVATORS_CONFIG.find(e => e.gridX === x && e.gridZ === z);
+      const clr = elCfg ? elCfg.color : 0x2980b9;
+      const cellMat = new THREE.MeshBasicMaterial({
+        color: clr,
+        transparent: true,
+        opacity: 0.12,
+        side: THREE.DoubleSide
+      });
+      const cell = new THREE.Mesh(cellGeo, cellMat);
+      cell.rotation.x = Math.PI / 2;
+      cell.position.set((x * CELL_SIZE) - offset + CELL_SIZE/2, -6.0, (z * CELL_SIZE) - offset + CELL_SIZE/2);
+      cell.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(cellGeo),
+        new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.23 })
+      ));
+      const distFromCenter = Math.hypot(x - 7, z - 7);
+      cell.userData = { baseColor: clr, dist: distFromCenter };
+      cells.push(cell);
+      foyerGroup.add(cell);
+    }
+  }
+
+  // NAČÍTANIE ORIGINÁLNEHO GLB MODELU Z WEBSERVERA
+  let importedModel = null;
+  const gltfLoader = new GLTFLoader();
+
+  // Čistá zlatá sféra ako neutrálny placeholder (žiadna škaredá rúra)
+  const fallbackSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 32, 32),
+    new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0x422006,
+      roughness: 0.2,
+      metalness: 0.3
+    })
+  );
+  fallbackSphere.position.set(0.2, -0.8, 2.0);
+  fallbackSphere.rotation.y = -Math.PI / 4;
+  foyerGroup.add(fallbackSphere);
+
+  gltfLoader.load('./latvomy_1975_model.glb', (gltf) => {
+    importedModel = gltf.scene;
+    importedModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.side = THREE.DoubleSide;
+      }
+    });
+    importedModel.rotation.y = -Math.PI / 4;
+    foyerGroup.remove(fallbackSphere);
+    foyerGroup.add(importedModel);
+    document.getElementById('stage-loading').style.display = 'none';
+  }, undefined, () => {
+    document.getElementById('stage-loading').style.display = 'none';
+  });
+
+  // ==============================================================
+  // 3. SKUPINA 4D: RODOSTROM KOREŇOV (8 -> 4 -> 2 -> 1 Narodený 1959)
+  // ==============================================================
+  const treeGroup = new THREE.Group();
+  treeGroup.visible = false;
+  scene.add(treeGroup);
+
+  // Funkcia pre orientovaný segment rastúci od P0 k P1
+  function createGrowableSegment(p0, p1, radius, color) {
+    const dir = new THREE.Vector3().subVectors(p1, p0);
+    const len = dir.length();
+    const dirNorm = dir.clone().normalize();
+    
+    const geom = new THREE.CylinderGeometry(radius, radius, len, 12);
+    geom.translate(0, len / 2, 0);
+    
+    const mat = new THREE.MeshStandardMaterial({
+      color: color,
+      roughness: 0.6,
+      metalness: 0.25
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(p0);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirNorm);
+    mesh.scale.set(1, 0, 1);
+    mesh.visible = false;
+    treeGroup.add(mesh);
+    
+    return {
+      mesh: mesh,
+      setGrowth: function(progress) {
+        if (progress <= 0.001) {
+          mesh.visible = false;
+        } else {
+          mesh.visible = true;
+          mesh.scale.set(1, Math.min(1.0, progress), 1);
+        }
+      }
+    };
+  }
+
+  // SÚRADNICE RODOSTROMU (Otec = hnedooranžová 0xb86214, Matka = modrá 0x0284c7)
+  const COLOR_FATHER = 0xb86214;
+  const COLOR_MOTHER = 0x0284c7;
+
+  const Y_GGP = -22.0; // 8 prarodičov
+  const Y_GP  = -16.5; // 4 starí rodičia
+  const Y_P   = -11.0; // 2 rodičia
+  const Y_ME  = -6.0;  // Bod 0 narodenia 1959
+
+  // GENERÁCIA 3: 4 PÁRY PRARODIČOV
+  // Pár 1 (Otec meč): József Vaskó & Mária Nagy -> Jozef Vaskó (1895)
+  const P1_A = new THREE.Vector3(-14, Y_GGP, -5);
+  const P1_B = new THREE.Vector3(-10, Y_GGP, -5);
+  const M1   = new THREE.Vector3(-12, Y_GP,  -5);
+  const seg_vasko_nagy_1 = createGrowableSegment(P1_A, M1, 0.45, COLOR_FATHER);
+  const seg_vasko_nagy_2 = createGrowableSegment(P1_B, M1, 0.45, COLOR_FATHER);
+
+  // Pár 2 (Otec praslica): József Rapcsák & Anna Compoly -> Erzsébet Rapcsák (1899)
+  const P2_A = new THREE.Vector3(-8, Y_GGP, -5);
+  const P2_B = new THREE.Vector3(-4, Y_GGP, -5);
+  const M2   = new THREE.Vector3(-6, Y_GP,  -5);
+  const seg_rapcsak_compoly_1 = createGrowableSegment(P2_A, M2, 0.45, COLOR_FATHER);
+  const seg_rapcsak_compoly_2 = createGrowableSegment(P2_B, M2, 0.45, COLOR_FATHER);
+
+  // Pár 3 (Matka meč): János Szakács & Erzsébet Cikó -> Bartolomej Szakács (1907)
+  const P3_A = new THREE.Vector3(4, Y_GGP, -5);
+  const P3_B = new THREE.Vector3(8, Y_GGP, -5);
+  const M3   = new THREE.Vector3(6, Y_GP,  -5);
+  const seg_szakacs_ciko_1 = createGrowableSegment(P3_A, M3, 0.45, COLOR_MOTHER);
+  const seg_szakacs_ciko_2 = createGrowableSegment(P3_B, M3, 0.45, COLOR_MOTHER);
+
+  // Pár 4 (Matka praslica): Pál Pataki (1878) & Mária Zöld (1892) -> Erzsébet Pataki (1914)
+  const P4_A = new THREE.Vector3(10, Y_GGP, -5);
+  const P4_B = new THREE.Vector3(14, Y_GGP, -5);
+  const M4   = new THREE.Vector3(12, Y_GP,  -5);
+  const seg_pataki_zold_1 = createGrowableSegment(P4_A, M4, 0.45, COLOR_MOTHER);
+  const seg_pataki_zold_2 = createGrowableSegment(P4_B, M4, 0.45, COLOR_MOTHER);
+
+  // GENERÁCIA 2: STARÍ RODIČIA RASTÚ K STRETNUTIU
+  const M_father = new THREE.Vector3(-9, Y_P, -2.5);
+  const seg_gp_father_1 = createGrowableSegment(M1, M_father, 0.65, COLOR_FATHER);
+  const seg_gp_father_2 = createGrowableSegment(M2, M_father, 0.65, COLOR_FATHER);
+
+  const M_mother = new THREE.Vector3(9, Y_P, -2.5);
+  const seg_gp_mother_1 = createGrowableSegment(M3, M_mother, 0.65, COLOR_MOTHER);
+  const seg_gp_mother_2 = createGrowableSegment(M4, M_mother, 0.65, COLOR_MOTHER);
+
+  // GENERÁCIA 1: RODIČIA RASTÚ K BODU 0 (1959)
+  const birthPos = new THREE.Vector3(0, Y_ME, 0);
+  const seg_parent_father = createGrowableSegment(M_father, birthPos, 0.9, COLOR_FATHER);
+  const seg_parent_mother = createGrowableSegment(M_mother, birthPos, 0.9, COLOR_MOTHER);
+
+  // Bod narodenia 1959 (zlatá sféra na prahu Y = -6.0)
+  const birthSeed = new THREE.Mesh(
+    new THREE.SphereGeometry(1.0, 24, 24),
+    new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xb45309 })
+  );
+  birthSeed.position.copy(birthPos);
+  birthSeed.visible = false;
+  treeGroup.add(birthSeed);
+
+  // GENERÁCIA 0: KMEŇ (1959 - 1979)
+  const trunkMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.85, 1.25, 9.5, 16),
+    new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.8 })
+  );
+  trunkMesh.position.set(0, -1.25, 0);
+  trunkMesh.visible = false;
+  treeGroup.add(trunkMesh);
+
+  // ROZKONÁRENIE OKOLO DVADSIATKY (1979+)
+  // Kánonické poradie: PREČO (300) -> ČO (200) -> AKO (100)
+  const branchTipPreco = new THREE.Vector3(-9, 14.5, -4);
+  const branchTipCo    = new THREE.Vector3(0, 16.5, 5.5);
+  const branchTipAko   = new THREE.Vector3(9.5, 13.5, -2);
+
+  const branchPreco = createGrowableSegment(new THREE.Vector3(0, 3.5, 0), branchTipPreco, 0.65, 0x8e44ad);
+  const branchCo    = createGrowableSegment(new THREE.Vector3(0, 3.5, 0), branchTipCo, 0.65, 0x27ae60);
+  const branchAko   = createGrowableSegment(new THREE.Vector3(0, 3.5, 0), branchTipAko, 0.65, 0x0284c7);
+
+  // SAMSARICKÝ CYKLUS: Cirkulujúca slučka PREČO -> ČO -> AKO -> PREČO
+  const samsaraCurve = new THREE.CatmullRomCurve3([
+    branchTipPreco,
+    branchTipCo,
+    branchTipAko,
+    new THREE.Vector3(0, 8.0, 0), // Prechod stredom späť nahor
+    branchTipPreco
+  ]);
+  const samsaraLoopGeo = new THREE.TubeGeometry(samsaraCurve, 48, 0.12, 8, true);
+  const samsaraLoopMat = new THREE.MeshBasicMaterial({
+    color: 0xfacc15,
+    transparent: true,
+    opacity: 0.55
+  });
+  const samsaraLoopMesh = new THREE.Mesh(samsaraLoopGeo, samsaraLoopMat);
+  samsaraLoopMesh.visible = false;
+  treeGroup.add(samsaraLoopMesh);
+
+  // TRETÍ HĹBKOVÝ KOREŇ PREČO (rastie po objavení hlavných konárov smerom do hĺbky)
+  const tapRootMain = createGrowableSegment(birthPos, new THREE.Vector3(0, -25.0, 0), 0.65, 0xa855f7);
+  const tapRootSub1 = createGrowableSegment(new THREE.Vector3(0, -25.0, 0), new THREE.Vector3(-3.5, -29.0, 2.5), 0.4, 0xa855f7);
+  const tapRootSub2 = createGrowableSegment(new THREE.Vector3(0, -25.0, 0), new THREE.Vector3(3.5, -28.5, -2.0), 0.4, 0xa855f7);
+
+  // Plody zrelosti
+  const fruitsData = [
+    { pos: branchTipPreco, color: 0x60a5fa }, // Tesla
+    { pos: branchTipCo,    color: 0x34d399 }, // Edison
+    { pos: branchTipAko,   color: 0xf59e0b }, // Ford
+    { pos: new THREE.Vector3(1.5, 19.5, 1.5), color: 0xfacc15 } // Baťa
+  ];
+  const fruitMeshes = [];
+  fruitsData.forEach(fd => {
+    const fm = new THREE.Mesh(
+      new THREE.SphereGeometry(0.8, 16, 16),
+      new THREE.MeshStandardMaterial({ color: fd.color, roughness: 0.3, emissive: 0x111111 })
+    );
+    fm.position.copy(fd.pos);
+    fm.visible = false;
+    treeGroup.add(fm);
+    fruitMeshes.push(fm);
+  });
+
+  const compostMesh = new THREE.Mesh(
+    new THREE.RingGeometry(1.5, 8.5, 24),
+    new THREE.MeshBasicMaterial({ color: 0x1a0f07, side: THREE.DoubleSide, opacity: 0.65, transparent: true })
+  );
+  compostMesh.rotation.x = -Math.PI / 2;
+  compostMesh.position.y = -5.95;
+  compostMesh.visible = false;
+  treeGroup.add(compostMesh);
+
+  // ==========================================
+  // 4. ANIMÁCIA 4D SCÉNY PODĽA ROKU
+  // ==========================================
+  function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+  function update4DScene(year) {
+    timeLabel.innerText = `${year}`;
+
+    // A. 4 Páry prarodičov rastú k bodom stretnutia (1880 - 1914)
+    seg_vasko_nagy_1.setGrowth(clamp((year - 1880) / 15, 0, 1));
+    seg_vasko_nagy_2.setGrowth(clamp((year - 1880) / 15, 0, 1));
+
+    seg_rapcsak_compoly_1.setGrowth(clamp((year - 1885) / 14, 0, 1));
+    seg_rapcsak_compoly_2.setGrowth(clamp((year - 1885) / 14, 0, 1));
+
+    seg_szakacs_ciko_1.setGrowth(clamp((year - 1890) / 17, 0, 1));
+    seg_szakacs_ciko_2.setGrowth(clamp((year - 1890) / 17, 0, 1));
+
+    seg_pataki_zold_1.setGrowth(clamp((year - 1895) / 19, 0, 1));
+    seg_pataki_zold_2.setGrowth(clamp((year - 1895) / 19, 0, 1));
+
+    // B. Starí rodičia rastú k stretnutiu (splodenie rodičov)
+    const gFatherParents = year < 1899 ? 0 : clamp((year - 1899) / (1932 - 1899), 0, 1);
+    seg_gp_father_1.setGrowth(gFatherParents);
+    seg_gp_father_2.setGrowth(gFatherParents);
+
+    const gMotherParents = year < 1914 ? 0 : clamp((year - 1914) / (1938 - 1914), 0, 1);
+    seg_gp_mother_1.setGrowth(gMotherParents);
+    seg_gp_mother_2.setGrowth(gMotherParents);
+
+    // C. Rodičia rastú a stretnú sa v bode 0 (1959)
+    const gParents = year < 1938 ? 0 : clamp((year - 1938) / (1959 - 1938), 0, 1);
+    seg_parent_father.setGrowth(gParents);
+    seg_parent_mother.setGrowth(gParents);
+
+    // D. Bod narodenia 1959
+    birthSeed.visible = year >= 1959;
+
+    // E. Kmeň: rastie od 1959 do ~1979 (okolo dvadsiatky)
+    if (year < 1959) {
+      trunkMesh.visible = false;
+    } else {
+      trunkMesh.visible = true;
+      const tProg = clamp((year - 1959) / 20, 0, 1);
+      trunkMesh.scale.set(1.0, tProg, 1.0);
+      trunkMesh.position.y = -6.0 + (4.75 * tProg);
+    }
+
+    // F. Rozkonárenie okolo dvadsiatky (po roku 1979)
+    const bProg = year < 1979 ? 0 : clamp((year - 1979) / 16, 0, 1);
+    branchPreco.setGrowth(bProg);
+    branchCo.setGrowth(bProg);
+    branchAko.setGrowth(bProg);
+    samsaraLoopMesh.visible = year >= 1985;
+
+    // G. Tretí hĺbkový koreň PREČO: začína rásť po objavení hlavných konárov
+    const tapProg = year < 1980 ? 0 : clamp((year - 1980) / 35, 0, 1);
+    tapRootMain.setGrowth(tapProg);
+    tapRootSub1.setGrowth(year < 2000 ? 0 : clamp((year - 2000) / 20, 0, 1));
+    tapRootSub2.setGrowth(year < 2000 ? 0 : clamp((year - 2000) / 20, 0, 1));
+
+    // H. Pôda: rozširuje sa postupne od narodenia (1959)
+    if (year < 1959) {
+      cells.forEach(c => { c.visible = false; });
+    } else {
+      const maxRadius = Math.min(10.5, ((year - 1959) / (2026 - 1959)) * 9.5 + 0.8);
+      cells.forEach(c => {
+        c.visible = c.userData.dist <= maxRadius;
+      });
+    }
+
+    // I. Plody zrelosti
+    const fProg = year < 2010 ? 0 : clamp((year - 2010) / 16, 0, 1);
+    fruitMeshes.forEach(f => {
+      if (fProg <= 0.001) {
+        f.visible = false;
+      } else {
+        f.visible = true;
+        f.scale.setScalar(fProg);
+      }
+    });
+    compostMesh.visible = year >= 2000;
+  }
+
+  timeSlider.addEventListener('input', (e) => {
+    update4DScene(parseInt(e.target.value, 10));
+  });
+
+  function updateBranchLabels2D() {
+    if (currentMode !== '4d' || parseInt(timeSlider.value, 10) < 1978) {
+      lblPreco.style.display = 'none';
+      lblCo.style.display    = 'none';
+      lblAko.style.display   = 'none';
+      return;
+    }
+
+    const t = I18N[currentLang];
+    lblPreco.innerText = t.branchPreco;
+    lblCo.innerText    = t.branchCo;
+    lblAko.innerText   = t.branchAko;
+
+    function projectToScreen(pos3D, el) {
+      const v = pos3D.clone();
+      v.project(camera);
+      if (v.z < 1.0) {
+        el.style.display = 'block';
+        el.style.left = `${(v.x * 0.5 + 0.5) * container.clientWidth}px`;
+        el.style.top  = `${(-(v.y * 0.5) + 0.5) * container.clientHeight}px`;
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
+    projectToScreen(branchTipPreco, lblPreco);
+    projectToScreen(branchTipCo,    lblCo);
+    projectToScreen(branchTipAko,   lblAko);
+  }
+
+  // ==========================================
+  // 5. PREPÍNANIE REŽIMOV POHĽADU (2D/3D/4D)
+  // ==========================================
+  window.setViewMode = function(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`ui-mode-${mode}`).classList.add('active');
+
+    const t = I18N[currentLang];
+    const captionEl = document.getElementById('ui-stage-caption');
+
+    if (mode === '2d') {
+      imgLayer.style.opacity = '1';
+      blendContainer.style.display = 'flex';
+      timeSliderContainer.style.display = 'none';
+      blendSlider.value = 0;
+      foyerGroup.visible = true;
+      treeGroup.visible = false;
+      cells.forEach(c => { c.visible = true; });
+      captionEl.innerText = t.caption2d;
+    } else if (mode === '3d') {
+      imgLayer.style.opacity = '0';
+      blendContainer.style.display = 'flex';
+      timeSliderContainer.style.display = 'none';
+      blendSlider.value = 100;
+      foyerGroup.visible = true;
+      treeGroup.visible = false;
+      cells.forEach(c => { c.visible = true; });
+      captionEl.innerText = t.caption3d;
+      resetToSurface();
+    } else if (mode === '4d') {
+      imgLayer.style.opacity = '0';
+      blendContainer.style.display = 'none';
+      timeSliderContainer.style.display = 'flex';
+      foyerGroup.visible = false;
+      treeGroup.visible = true;
+      captionEl.innerText = t.caption4d;
+      camera.position.set(42, 6, 46);
+      controls.target.set(0, -3, 0);
+      update4DScene(parseInt(timeSlider.value, 10));
+    }
+  };
+
+  blendSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    imgLayer.style.opacity = (1 - (val / 100)).toString();
+  });
+
+  window.resetToSurface = function() {
+    camera.position.copy(cameraSurfacePos);
+    controls.target.copy(cameraSurfaceTarget);
+  };
+
+  // ==========================================
+  // 6. JAZYKOVÝ PREPÍNAČ
+  // ==========================================
+  window.applyLanguage = function(lang) {
+    currentLang = lang;
+    const t = I18N[lang];
+    if (!t) return;
+
+    document.querySelectorAll('.lang-article').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.lang-item').forEach(i => i.classList.remove('active'));
+    const targetArt = document.getElementById(`art-${lang}`);
+    if (targetArt) targetArt.classList.add('active');
+
+    document.getElementById('current-lang-code').innerText = t.code;
+    document.getElementById('ui-title').innerHTML = t.title;
+    document.getElementById('ui-trio').innerText = t.trio;
+    document.getElementById('ui-subtitle').innerText = t.subtitle;
+    document.getElementById('ui-btn-surface').innerText = t.btnSurface;
+    document.getElementById('ui-btn-login').innerText = t.btnLogin;
+    document.getElementById('ui-warning-banner').innerHTML = t.warning;
+    document.getElementById('ui-mode-2d').innerText = t.mode2d;
+    document.getElementById('ui-mode-3d').innerText = t.mode3d;
+    document.getElementById('ui-mode-4d').innerText = t.mode4d;
+    document.getElementById('ui-lbl-blend-2d').innerText = t.lblBlend2d;
+    document.getElementById('ui-lbl-blend-3d').innerText = t.lblBlend3d;
+    document.getElementById('ui-lbl-time-prefix').innerText = t.lblTimePrefix;
+    document.getElementById('ui-intro-quote').innerText = t.quote;
+    document.getElementById('ui-footer-canon').innerText = t.footerCanon;
+    document.getElementById('ui-footer-note').innerText = t.footerNote;
+
+    const captionEl = document.getElementById('ui-stage-caption');
+    if (currentMode === '2d') captionEl.innerText = t.caption2d;
+    else if (currentMode === '3d') captionEl.innerText = t.caption3d;
+    else if (currentMode === '4d') captionEl.innerText = t.caption4d;
+
+    updateBranchLabels2D();
+    localStorage.setItem('latvomy_lang', lang);
+  };
+
+  function detectLanguage() {
+    const saved = localStorage.getItem('latvomy_lang');
+    if (saved && I18N[saved]) return saved;
+    const nav = (navigator.language || navigator.userLanguage || 'sk').toLowerCase();
+    if (nav.startsWith('hu')) return 'hu';
+    if (nav.startsWith('de')) return 'de';
+    if (nav.startsWith('en')) return 'en';
+    return 'sk';
+  }
+
+  // ==========================================
+  // 7. PREPÍNAČ DEŇ / NOC
+  // ==========================================
+  function applyTheme(isDark) {
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      ambLight.color.setHex(0x555555);
+      light.intensity = 1.0;
+      renderer.setClearColor(0x121212, 1);
+      cells.forEach(c => { c.material.opacity = 0.22; });
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      ambLight.color.setHex(0x888888);
+      light.intensity = 1.4;
+      renderer.setClearColor(0xffffff, 1);
+      cells.forEach(c => { c.material.opacity = 0.12; });
+    }
+  }
+
+  document.getElementById('ui-btn-theme').addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyTheme(!isDark);
+    localStorage.setItem('latvomy_theme', !isDark ? 'dark' : 'light');
+  });
+
+  // ==========================================
+  // 8. ANIMAČNÁ SLUČKA
+  // ==========================================
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    // Jemná rotácia samsarickej energetickej slučky
+    if (samsaraLoopMesh.visible) {
+      samsaraLoopMesh.rotation.y += 0.005;
+    }
+    renderer.render(scene, camera);
+    updateBranchLabels2D();
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+
+  // Inicializácia
+  const savedTheme = localStorage.getItem('latvomy_theme');
+  applyTheme(savedTheme === 'dark');
+  applyLanguage(detectLanguage());
+  update4DScene(2026);
+</script>
+</body>
+</html>
